@@ -1,14 +1,3 @@
-
-# DROP Explorer
-
-## Things to know
-
-- Multi-span answers are sorted
-- Only distinct additional answers are displayed, also relative to the main answer.   
-
-***
-
-
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
