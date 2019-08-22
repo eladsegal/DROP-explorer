@@ -1,0 +1,21 @@
+.ReactTable.-striped-passage .rt-tr.-odd {
+    background: rgba(0, 162, 255, 0.11);
+}
+.ReactTable.-striped-passage .rt-tr.-even {
+    background: rgba(0, 162, 255, 0.05);
+}
+.ReactTable.-highlight-passage .rt-tbody .rt-tr:not(.-padRow):hover {
+    background: rgba(231, 216, 82, 0.541);
+}
+.ReactTable.-striped-question .rt-tr.-odd {
+    background: rgba(209, 175, 223, 0.17);
+}
+.ReactTable.-striped-question .rt-tr.-even {
+    background: rgba(209, 175, 223, 0.07);
+}
+.ReactTable.-highlight-question .rt-tbody .rt-tr:not(.-padRow):hover {
+    background: rgba(231, 216, 82, 0.541);
+}
+.ReactTable .rt-tbody .rt-td {
+    border-right: 1px solid rgba(0,0,0,0.03);
+}

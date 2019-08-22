@@ -1,0 +1,16 @@
+.highlight-gold {
+    background-color: #ebc700;
+}
+/*.highlight-predicted {
+    background-color: #92affd;
+}*/
+.highlight-search {
+    background-color: #f492fd;
+}
+
+.highlight-predicted {
+    background-color: #fa9e9e;
+}
+.highlight-correct {
+    background-color: #6bec41;
+}
