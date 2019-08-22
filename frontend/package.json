@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://eladsegal.github.io/project-NLP-AML",
+  "homepage": "https://eladsegal.github.io/DROP-explorer",
   "dependencies": {
     "bootstrap": "^4.3.1",
     "clone-deep": "^4.0.1",
