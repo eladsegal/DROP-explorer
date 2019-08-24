@@ -6,6 +6,7 @@ $line-height-base:            1.5 !default;
 $mark-padding:                0em !default;
 
 $card-spacer-x:                     0.25rem !default;
+$card-spacer-y:                     .35rem !default;
 $list-group-item-padding-y:         .25rem !default;
 $list-group-item-padding-x:         0.25rem !default;
 
@@ -13,15 +14,30 @@ $blue:                        #5ca6c9;
 
 $table-striped-order:         even !default;
 
-code,
-code span,
-pre {
-  font-family: 'Roboto Mono', monospace!important
-}
+@import '../../node_modules/bootstrap/scss/bootstrap';
 
 a {
   text-decoration: none;
   cursor: pointer;
 }
 
-@import '../../node_modules/bootstrap/scss/bootstrap';
+button.fakeLink {
+  background: none!important;
+  border: none;
+  padding: 0!important;
+}
+
+button.fakeLink:focus {
+  outline: none;
+}
+
+.navbar-brand button, a {
+  font-weight: 500!important;
+  font-size: 1.25rem!important;
+}
+
+code,
+code span,
+pre {
+  font-family: 'Roboto Mono', monospace!important
+}

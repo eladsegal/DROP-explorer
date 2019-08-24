@@ -10,7 +10,7 @@ import { shouldUpdate, isChanged, areSetsEqual,
 import { processDataHelper, filterDataHelper } from './DataUtils';
 import { getAnswerField, getAnswerForDisplay, 
     answerAccessor, answerTypeAccessor, 
-    predictionAccessor, predictionTypeAccessor } from '../AnswersUtils';
+    predictionAccessor, predictionTypeAccessor, predictionMetricsAccessor } from '../AnswersUtils';
 import Highlighter from 'react-highlight-words';
 import { 
     Table 
@@ -34,7 +34,7 @@ const initialInternals = {
 
 const initialState = {
     page: 0,
-    passagesPageSize: 20,
+    passagesPageSize: 5,
     questionsPageSize: MAX_QUESTIONS_PER_PASSAGE_ASSUMPTION,
     expanded_passage_ids: [],
     activeQuestions: {},
@@ -309,7 +309,8 @@ class ExplorerTable extends React.Component {
                 Header: 'Count',
                 id: 'questions_count',
                 accessor: row => row.qa_pairs.length,
-                width: 50
+                width: 50,
+                resizable: false
             }
         ]
 
@@ -340,7 +341,8 @@ class ExplorerTable extends React.Component {
                 Header: 'Answer Type',
                 id: 'answerType',
                 accessor: answerTypeAccessor,
-                width: 110
+                width: 100,
+                resizable: false
             },
             {
                 Header: 'Additional Distinct Answers',
@@ -364,8 +366,8 @@ class ExplorerTable extends React.Component {
                     });
                     return answers;
                 },
-                Cell: props => <Table striped><tbody>{props.value.map((answer, index) => 
-                    <tr key={index}><td style={{'whiteSpace': 'pre-wrap', padding: 0, 'borderTop': 0}}>{answer}</td></tr>
+                Cell: props => <Table style={{height: '100%'}} striped><tbody>{props.value.map((answer, index) => 
+                    <tr key={index}><td style={{whiteSpace: 'pre-wrap', padding: 0, 'borderTop': 0}}>{answer}</td></tr>
                 )}</tbody></Table>,
                 width: 170
             },            
@@ -382,8 +384,23 @@ class ExplorerTable extends React.Component {
                 id: 'predictionType',
                 show: this.internals.hasValidPredictions,
                 accessor: predictionTypeAccessor,
-                width: 110
+                width: 110,
+                resizable: false
             },
+            {
+                Header: 'F1',
+                id: 'f1',
+                show: this.internals.hasValidPredictions,
+                accessor: 'f1',
+                width: 40,
+                resizable: false
+            }, {
+                Header: 'EM',
+                show: this.internals.hasValidPredictions,
+                accessor: 'em',
+                width: 40,
+                resizable: false
+            }
         ]
 
 
@@ -405,6 +422,9 @@ class ExplorerTable extends React.Component {
             }
         }
 
+        const f1 = 0.53;
+        const em = 0.46;
+
         return <div className='container-fluid'>
             <div className='row justify-content-center'>
                 <div className='col-3'>
@@ -423,6 +443,11 @@ class ExplorerTable extends React.Component {
                         `Predictions Count: ${predictedCount.toLocaleString()}` :
                         'Predictions do not match the dataset'
                         }
+                    </h4>
+                </div> : null}
+                {(false && this.props.predictions && this.internals.hasValidPredictions) ? <div className='col-3'>
+                    <h4>
+                        F1: {f1}, EM: {em}
                     </h4>
                 </div> : null}
             </div>
@@ -487,22 +512,24 @@ let renderPassageCell = function(props) {
     if (activeQuestionId) {
         const qa_pair = props.original.qa_pairs
                         .find(qa_pair => qa_pair.query_id === activeQuestionId);
-        const selectedAnswer = qa_pair.answer;
-        // TODO: Would be best to use the best aligned answer including the additional answers.
+        if (qa_pair) {
+            const selectedAnswer = qa_pair.answer;
+            // TODO: Would be best to use the best aligned answer including the additional answers.
 
-        const answerType = getAnswerField(selectedAnswer)
-        searchWords = (answerType.key === 'number') ? 
-            [Number(selectedAnswer.number).toString()] : [...selectedAnswer.spans]
+            const answerType = getAnswerField(selectedAnswer)
+            searchWords = (answerType.key === 'number') ? 
+                [Number(selectedAnswer.number).toString()] : [...selectedAnswer.spans]
 
-        categoryPerSearchWordIndex = searchWords.map(searchWord => 'gold_0')
-        highlightClassNamePerCategory = {'gold_0': 'highlight-gold'}
+            categoryPerSearchWordIndex = searchWords.map(searchWord => 'gold_0')
+            highlightClassNamePerCategory = {'gold_0': 'highlight-gold'}
 
-        const prediction = qa_pair.prediction;
-        if (prediction) {
-            searchWords.push(...prediction);
-            categoryPerSearchWordIndex.push(...prediction.map(x => 'prediction_1'));
-            highlightClassNamePerCategory['prediction_1'] = 'highlight-predicted';
-            highlightClassNamePerCategory['gold_0-prediction_1'] = 'highlight-correct'
+            const prediction = qa_pair.prediction;
+            if (prediction) {
+                searchWords.push(...prediction);
+                categoryPerSearchWordIndex.push(...prediction.map(x => 'prediction_1'));
+                highlightClassNamePerCategory['prediction_1'] = 'highlight-predicted';
+                highlightClassNamePerCategory['gold_0-prediction_1'] = 'highlight-correct'
+            }
         }
     }
     return <WrapDiv><Highlighter 

@@ -38,13 +38,10 @@ export function processDataHelper(dataset, predictions) {
                     if (query_displayIndex !== undefined) {
                         const qa_pair = row.qa_pairs[passage_id_to_queries_displayIndexes[passage_id][query_id]]
 
-                        qa_pair.prediction = prediction.answer;
-                        if (qa_pair.loss) {
-                            qa_pair.loss = prediction.loss;
-                        }
-                        if (qa_pair.f1) {
-                            qa_pair.f1 = prediction.f1;
-                        }
+                        qa_pair.prediction = prediction.answer.value;
+                        qa_pair.f1 = forceTwoDecimalPlaces(prediction.f1);
+                        qa_pair.em = forceTwoDecimalPlaces(prediction.em);
+                        qa_pair.loss = forceTwoDecimalPlaces(prediction.loss);
                     } else {
                         hasValidPredictions = false;
                         break;
@@ -65,6 +62,10 @@ export function processDataHelper(dataset, predictions) {
         hasValidatedAnswers,
         hasValidPredictions
     };
+}
+
+function forceTwoDecimalPlaces(num) {
+    return num !== undefined ? parseFloat(Math.round(num * 100) / 100).toFixed(2) : undefined;
 }
 
 function process_row(accumulator, row, index) {
@@ -177,6 +178,8 @@ export function filterDataHelper(internals, filteredAnswerTypes, filteredPredict
     if (!filteredData) {
         filteredData = data;
     }
+
+    // Add mean metrics for passage and overall?
 
     return {
         filteredData,

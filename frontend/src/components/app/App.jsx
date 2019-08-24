@@ -22,6 +22,7 @@ class App extends React.Component {
         this.toggleMenu = this.toggleMenu.bind(this);
         this.state = {
             useLocalDataset: false,
+            allowSourceSelection: true,
             filteredAnswerTypes: ['multi_span', 'single_span', 'number', 'date'],
             filteredPredictionTypes: ['multi_span', 'single_span', 'number', 'date', 'none'],
             instantSearch: true,
@@ -31,6 +32,7 @@ class App extends React.Component {
             },
             navbarSticky: 'top', // can be 'top' or undefined
             isOpen: true,
+            showNavbarImage: true,
             // ^ startup settings available for configuration
 
             dataset: undefined,
@@ -80,14 +82,24 @@ class App extends React.Component {
     render() {
         return <div>
                     <Navbar color="light" light sticky={this.state.navbarSticky} 
-                            style={{'borderBottom': '1px solid rgba(0,0,0,0.15)'}}>
-                        <NavbarBrand onClick={() => {this.setState({ navbarSticky: this.state.navbarSticky === 'top' ? undefined : 'top' })}}>
-                            DROP Explorer
-                        </NavbarBrand>
-                        <NavbarToggler onClick={this.toggleMenu} />
+                            style={{borderBottom: '1px solid rgba(0,0,0,0.15)'}}>
+                        <div style={{width: '100%'}}>
+                            {this.state.showNavbarImage ? 
+                            <div className='navbar-brand'>
+                                {<a target='_blank' rel='noopener noreferrer' href='https://allennlp.org/drop'>
+                                    <img style={{paddingRight: '15px', marginBottom: '3px'}} src='https://allennlp.org/assets/allennlp-logo-color.png' height='14' alt='' />
+                                </a>}
+                                <button className='fakeLink' onClick={() => {this.setState({ navbarSticky: this.state.navbarSticky === 'top' ? undefined : 'top' })}}>DROP Explorer</button>
+                            </div> : 
+                            <NavbarBrand onClick={() => {this.setState({ navbarSticky: this.state.navbarSticky === 'top' ? undefined : 'top' })}}>
+                                DROP Explorer
+                            </NavbarBrand>}
+                            <NavbarToggler style={{float: 'right', marginTop: '0.25rem'}} onClick={this.toggleMenu} />
+                        </div>
                         <Collapse isOpen={this.state.isOpen} navbar>
                             <ExplorerSettings onChange={this.settingsChange}
                                 useLocalDataset={this.state.useLocalDataset}
+                                allowSourceSelection={this.state.allowSourceSelection}
                                 expandAllFunc={this.state.expandAllFunc}
                                 collapseAllFunc={this.state.collapseAllFunc}
                                 filteredAnswerTypes={this.state.filteredAnswerTypes}

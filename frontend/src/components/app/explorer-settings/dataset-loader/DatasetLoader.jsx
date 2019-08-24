@@ -39,7 +39,7 @@ class DatasetLoader extends React.PureComponent {
 
     render() {
         return <ListGroup>
-                <ListGroupItem>
+                {this.props.allowSourceSelection ? <ListGroupItem>
                     <FormGroup check>
                         <Label check>
                             <Input type="checkbox" 
@@ -50,7 +50,7 @@ class DatasetLoader extends React.PureComponent {
                             />Use Local Dataset
                         </Label>
                     </FormGroup>
-                </ListGroupItem>
+                </ListGroupItem> : null}
                 <ListGroupItem>
                     <DatasetSelector onChange={this.datasetChange} local={this.state.useLocalDataset}/>
                 </ListGroupItem>

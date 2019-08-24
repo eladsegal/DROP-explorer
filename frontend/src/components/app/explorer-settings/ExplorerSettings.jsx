@@ -71,11 +71,14 @@ class ExplorerSettings extends React.Component {
                 <Card className='col-sm-2 p-0'>
                     <CardHeader>Dataset</CardHeader>
                     <CardBody>
-                        <DatasetLoader onDatasetChange={this.datasetChange} useLocalDataset={this.props.useLocalDataset} />
+                        <DatasetLoader onDatasetChange={this.datasetChange} 
+                                        useLocalDataset={this.props.useLocalDataset} 
+                                        allowSourceSelection={this.props.allowSourceSelection} />
                     </CardBody>
                 </Card>
                 <Card className='col-sm-2 p-0'>
-                    <CardBody>
+                    <CardHeader>Table Operations</CardHeader>
+                    <CardBody style={{height: 0, overflow: 'auto'}}>
                         <ListGroup>
                             <ListGroupItem>
                                 <Button color='primary' size='sm' style={{width: '100%'}} onClick={() => {
