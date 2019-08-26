@@ -394,7 +394,7 @@ function isQuestionTextSearchValid(qa_pair, searchText, hasValidPredictions) {
         const evaluationPrediction = qa_pair.evaluationPrediction;
         if (evaluationPrediction) {
             result = evaluationPrediction.some(x => {
-                x.toLowerCase().includes(searchText)
+                return x.toLowerCase().includes(searchText)
             });
         }
     }

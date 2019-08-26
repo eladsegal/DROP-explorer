@@ -122,7 +122,7 @@ class ExplorerTable extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (isChanged(['data', 'predictions'], prevProps, this.props)) {
+        if (isChanged(['dataset', 'predictions'], prevProps, this.props)) {
             this.props.onPredictionsTypeChanged(this.internals.predictionTypes);
         }
         if (isChanged(filterProps, prevProps, this.props)) {
@@ -258,7 +258,7 @@ class ExplorerTable extends React.Component {
         });
     }
 
-    filterData() {
+    filterData(immediatelyAfterDatasetChange) {
         const filteredAnswerTypes = this.props.filteredAnswerTypes;
         const filteredPredictionTypes = this.props.filteredPredictionTypes;
         const searchProps = this.props.searchProps;
@@ -267,7 +267,7 @@ class ExplorerTable extends React.Component {
             filteredData,
             filteredDataPerFilter,
             metrics
-        } = filterDataHelper(this.internals, filteredAnswerTypes, filteredPredictionTypes, searchProps);
+        } = filterDataHelper(this.internals, filteredAnswerTypes, filteredPredictionTypes, searchProps, immediatelyAfterDatasetChange);
         
         this.setInternals({
             filteredData,
@@ -283,14 +283,16 @@ class ExplorerTable extends React.Component {
     render() {
 
         console.time('processData');
+        let immediatelyAfterDatasetChange = false;
         if (!this.internals.data) {
             this.processData();
+            immediatelyAfterDatasetChange = true;
         }
         console.timeEnd('processData');
         
         console.time('filterData');
         if (!this.internals.filteredData) {
-            this.filterData();
+            this.filterData(immediatelyAfterDatasetChange);
         }        
         console.timeEnd('filterData');
 
