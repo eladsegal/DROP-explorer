@@ -34,7 +34,7 @@ class App extends React.Component {
             },
             navbarSticky: 'top', // can be 'top' or undefined
             isOpen: true,
-            showNavbarImage: true,
+            showNavbarImage: false,
             // ^ startup settings available for configuration
 
             dataset: undefined,
