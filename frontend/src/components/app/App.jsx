@@ -10,7 +10,7 @@ import ExplorerSettings from './explorer-settings/ExplorerSettings';
 import ExplorerTable from './explorer-table/ExplorerTable';
 
 const props_updateSignals = []
-const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'filteredPredictionTypes',  'searchProps', 'navbarSticky', 'isOpen']
+const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'predictionTypes', 'filteredPredictionTypes', 'searchProps', 'navbarSticky', 'isOpen']
 class App extends React.Component {
     constructor(props) {
         super(props);
@@ -19,12 +19,14 @@ class App extends React.Component {
         this.getClearSelectedAnswersFunc = this.getClearSelectedAnswersFunc.bind(this);
         this.getExpandAllFunc = this.getExpandAllFunc.bind(this);
         this.getCollapseAllFunc = this.getCollapseAllFunc.bind(this);
+        this.predictionTypesChanged = this.predictionTypesChanged.bind(this);
         this.toggleMenu = this.toggleMenu.bind(this);
         this.state = {
             useLocalDataset: false,
             allowSourceSelection: true,
             filteredAnswerTypes: ['multi_span', 'single_span', 'number', 'date'],
-            filteredPredictionTypes: ['multi_span', 'single_span', 'number', 'date', 'none'],
+            predictionTypes: [],
+            filteredPredictionTypes: [],
             instantSearch: true,
             searchProps: {
                 searchText: '',
@@ -62,15 +64,19 @@ class App extends React.Component {
     }
     
     getClearSelectedAnswersFunc(func) {
-        this.setState({ clearSelectedAnswersFunc: func })
+        this.setState({ clearSelectedAnswersFunc: func });
     }
 
     getExpandAllFunc(func) {
-        this.setState({ expandAllFunc: func })
+        this.setState({ expandAllFunc: func });
     }
 
     getCollapseAllFunc(func) {
-        this.setState({ collapseAllFunc: func })
+        this.setState({ collapseAllFunc: func });
+    }
+
+    predictionTypesChanged(predictionTypes) {
+        this.setState({ predictionTypes });
     }
 
     toggleMenu() {
@@ -104,6 +110,7 @@ class App extends React.Component {
                                 collapseAllFunc={this.state.collapseAllFunc}
                                 filteredAnswerTypes={this.state.filteredAnswerTypes}
                                 filteredPredictionTypes={this.state.filteredPredictionTypes}
+                                predictionTypes={this.state.predictionTypes}
                                 instantSearch={this.state.instantSearch}
                                 searchProps={this.state.searchProps}
                                 clearSelectedAnswersFunc={this.state.clearSelectedAnswersFunc} />
@@ -118,6 +125,7 @@ class App extends React.Component {
                         sendClearSelectedAnswersFunc={this.getClearSelectedAnswersFunc}
                         sendExpandAllFunc={this.getExpandAllFunc}
                         sendCollapseAllFunc={this.getCollapseAllFunc}
+                        onPredictionsTypeChanged={this.predictionTypesChanged}
                     />
                 </div>
     }

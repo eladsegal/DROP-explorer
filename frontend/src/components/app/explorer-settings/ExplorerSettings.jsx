@@ -11,12 +11,12 @@ import {
     Button,
     Container
 } from 'reactstrap';
-import { shouldUpdate } from '../../Utils';
-import { answerTypes, predictionTypes } from '../AnswersUtils';
+import { shouldUpdate, isChanged } from '../../Utils';
+import { answerTypesConst } from '../AnswersUtils';
 import SearchFilter from './SearchFilter';
 import CheckboxList from '../../checkbox_list/CheckboxList';
 
-const props_updateSignals = []
+const props_updateSignals = ['predictionTypes']
 const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'filteredPredictionTypes', 'searchProps']
 class ExplorerSettings extends React.Component {
     constructor(props) {
@@ -42,6 +42,9 @@ class ExplorerSettings extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (isChanged(['predictionTypes'], prevProps, this.props)) {
+            this.setState({ filteredPredictionTypes: this.props.predictionTypes.map(predictionType => predictionType.key) });
+        }
         this.props.onChange(this.state);
     }
 
@@ -110,7 +113,7 @@ class ExplorerSettings extends React.Component {
                 <Card className='col-sm-2 p-0'>
                     <CardHeader>Filter Answer Type</CardHeader>
                     <CardBody>
-                        <CheckboxList onChange={this.filteredAnswerTypesChange} checked={this.props.filteredAnswerTypes} options={answerTypes}></CheckboxList>
+                        <CheckboxList onChange={this.filteredAnswerTypesChange} checked={this.state.filteredAnswerTypes} options={answerTypesConst}></CheckboxList>
                     </CardBody>
                 </Card>
                 <Card className='col-sm-6 p-0'>
@@ -129,9 +132,9 @@ class ExplorerSettings extends React.Component {
                         </CardBody>
                 </Card>
                 {this.state.predictions ? <Card className='col-sm-2 p-0'>
-                    <CardHeader>Prediction Type</CardHeader>
+                    <CardHeader>Prediction Head</CardHeader>
                     <CardBody>
-                        <CheckboxList onChange={this.filteredPredictionTypesChange} checked={this.props.filteredPredictionTypes} options={predictionTypes}></CheckboxList>
+                        <CheckboxList onChange={this.filteredPredictionTypesChange} checked={this.state.filteredPredictionTypes} options={this.props.predictionTypes}></CheckboxList>
                     </CardBody>
                 </Card> : null}
             </CardGroup>

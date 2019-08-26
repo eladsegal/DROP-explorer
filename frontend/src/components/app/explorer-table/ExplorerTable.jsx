@@ -8,9 +8,6 @@ import WrapDiv from './WrapDiv'
 import { shouldUpdate, isChanged, areSetsEqual, 
     displayIndexesToViewIndex, viewIndexToDisplayIndex, viewIndexToDisplayIndexes } from '../../Utils';
 import { processDataHelper, filterDataHelper } from './DataUtils';
-import { getAnswerField, getAnswerForDisplay, 
-    answerAccessor, answerTypeAccessor, 
-    predictionAccessor, predictionTypeAccessor, predictionMetricsAccessor } from '../AnswersUtils';
 import Highlighter from 'react-highlight-words';
 import { 
     Table 
@@ -21,15 +18,16 @@ const MAX_QUESTIONS_PER_PASSAGE_ASSUMPTION = 150;
 const initialInternals = {
     data: undefined,
     filteredData: undefined,
-    sortedData: undefined,
     filteredDataPerFilter: {
         answerTypes: undefined,
         predictionTypes: undefined,
         search: undefined
     },
+    predictionTypes: [],
 
     hasValidatedAnswers: false,
     hasValidPredictions: false,
+    metrics: undefined
 }
 
 const initialState = {
@@ -51,6 +49,7 @@ class ExplorerTable extends React.Component {
 
         renderPassageCell = renderPassageCell.bind(this);
         renderHighlightableQuestionCell = renderHighlightableQuestionCell.bind(this);
+        renderAnswersCell = renderAnswersCell.bind(this);
         activeQuestionChange = activeQuestionChange.bind(this);
 
         this.clearSelectedAnswers = this.clearSelectedAnswers.bind(this);
@@ -123,6 +122,9 @@ class ExplorerTable extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (isChanged(['data', 'predictions'], prevProps, this.props)) {
+            this.props.onPredictionsTypeChanged(this.internals.predictionTypes);
+        }
         if (isChanged(filterProps, prevProps, this.props)) {
             // force updated is needed for getExpanded() to be called again,
             // so it will use the filtered sorted data to find the expanded rows
@@ -244,14 +246,16 @@ class ExplorerTable extends React.Component {
         const {
             data, 
             hasValidatedAnswers,
-            hasValidPredictions
+            hasValidPredictions,
+            predictionTypes
         } = processDataHelper(dataset, predictions);
 
         this.setInternals({
             data,
             hasValidatedAnswers,
-            hasValidPredictions
-        })
+            hasValidPredictions,
+            predictionTypes
+        });
     }
 
     filterData() {
@@ -261,13 +265,15 @@ class ExplorerTable extends React.Component {
 
         const {
             filteredData,
-            filteredDataPerFilter
+            filteredDataPerFilter,
+            metrics
         } = filterDataHelper(this.internals, filteredAnswerTypes, filteredPredictionTypes, searchProps);
         
         this.setInternals({
             filteredData,
-            filteredDataPerFilter
-        })
+            filteredDataPerFilter,
+            metrics
+        });
     }
 
     getSortedData() {
@@ -311,6 +317,21 @@ class ExplorerTable extends React.Component {
                 accessor: row => row.qa_pairs.length,
                 width: 50,
                 resizable: false
+            },
+            {
+                Header: 'F1',
+                id: 'f1',
+                show: this.internals.hasValidPredictions,
+                accessor: qa_pair => forceDecimalPlaces(qa_pair.f1, 2),
+                width: 40,
+                resizable: false
+            }, {
+                Header: 'EM',
+                id: 'em',
+                show: this.internals.hasValidPredictions,
+                accessor: qa_pair => forceDecimalPlaces(qa_pair.em, 2),
+                width: 40,
+                resizable: false
             }
         ]
 
@@ -331,59 +352,31 @@ class ExplorerTable extends React.Component {
                 Cell: renderHighlightableQuestionCell
             },
             {
-                Header: 'Answer',
-                id: 'answer',
-                accessor: answerAccessor,
-                Cell: renderHighlightableQuestionCell,
+                Header: 'Answer Options',
+                accessor: 'displayAnswers',
+                Cell: renderAnswersCell,
                 width: 150
             },
             {
-                Header: 'Answer Type',
-                id: 'answerType',
-                accessor: answerTypeAccessor,
+                Header: '→ Type',
+                id: 'answersTypes',
+                accessor: qa_pair => qa_pair.answersTypes,
+                Cell: renderAnswersTypesCell,
                 width: 100,
                 resizable: false
             },
             {
-                Header: 'Additional Distinct Answers',
-                id: 'additional_answers',
-                show: this.internals.hasValidatedAnswers,
-                accessor: qa_pair => {
-                    if (!qa_pair.validated_answers || qa_pair.validated_answers.length === 0) {
-                        return null;
-                    }
-                    
-                    const main_answer = answerAccessor(qa_pair);
-                    const answers = [];
-                    qa_pair.validated_answers.forEach((answerDict, index) => {
-                        const answerField = getAnswerField(answerDict);
-                        if (answerField) {
-                            const answer = getAnswerForDisplay(answerDict[answerField.key]).toString();
-                            if (answer !== main_answer && !answers.includes(answer)) {
-                                answers.push(answer);
-                            }
-                        }
-                    });
-                    return answers;
-                },
-                Cell: props => <Table style={{height: '100%'}} striped><tbody>{props.value.map((answer, index) => 
-                    <tr key={index}><td style={{whiteSpace: 'pre-wrap', padding: 0, 'borderTop': 0}}>{answer}</td></tr>
-                )}</tbody></Table>,
-                width: 170
-            },            
-            {
                 Header: 'Prediction',
-                id: 'prediction',
                 show: this.internals.hasValidPredictions,
-                accessor: predictionAccessor,
+                accessor: 'displayPrediction',
                 Cell: renderHighlightableQuestionCell,
                 width: 150
             },
             {
-                Header: 'Prediction Type',
+                Header: 'Prediction Head',
                 id: 'predictionType',
                 show: this.internals.hasValidPredictions,
-                accessor: predictionTypeAccessor,
+                accessor: qa_pair => qa_pair.predictionType ? qa_pair.predictionType.value : '',
                 width: 110,
                 resizable: false
             },
@@ -391,39 +384,18 @@ class ExplorerTable extends React.Component {
                 Header: 'F1',
                 id: 'f1',
                 show: this.internals.hasValidPredictions,
-                accessor: 'f1',
+                accessor: qa_pair => forceDecimalPlaces(qa_pair.f1, 2),
                 width: 40,
                 resizable: false
             }, {
                 Header: 'EM',
+                id: 'em',
                 show: this.internals.hasValidPredictions,
-                accessor: 'em',
+                accessor: qa_pair => forceDecimalPlaces(qa_pair.em, 2),
                 width: 40,
                 resizable: false
             }
         ]
-
-
-        let questionsCount = 0;
-        let predictedCount = 0;
-        for (let i=0; i < this.internals.filteredData.length; i++) {
-            const row = this.internals.filteredData[i];
-
-            questionsCount += row.qa_pairs.length;
-
-            if (this.internals.hasValidPredictions) {
-                for (let j=0; j < row.qa_pairs.length; j++) {
-                    const qa_pair = row.qa_pairs[j];
-        
-                    if (qa_pair.prediction) {
-                        predictedCount += 1;
-                    }
-                }
-            }
-        }
-
-        const f1 = 0.53;
-        const em = 0.46;
 
         return <div className='container-fluid'>
             <div className='row justify-content-center'>
@@ -434,20 +406,20 @@ class ExplorerTable extends React.Component {
                 </div>
                 <div className='col-3'>
                     <h4>
-                        Questions Count: {questionsCount.toLocaleString()}
+                        Questions Count: {this.internals.metrics.questionsCount.toLocaleString()}
                     </h4>
                 </div>
                 {this.props.predictions ? <div className='col-3'>
                     <h4>
                         {this.internals.hasValidPredictions ?
-                        `Predictions Count: ${predictedCount.toLocaleString()}` :
+                        `Predictions Count: ${this.internals.metrics.predictedCount.toLocaleString()}` :
                         'Predictions do not match the dataset'
                         }
                     </h4>
                 </div> : null}
-                {(false && this.props.predictions && this.internals.hasValidPredictions) ? <div className='col-3'>
+                {(this.props.predictions && this.internals.hasValidPredictions) ? <div className='col-3'>
                     <h4>
-                        F1: {f1}, EM: {em}
+                        F1: {forceDecimalPlaces(this.internals.metrics.f1, 3)}, EM: {forceDecimalPlaces(this.internals.metrics.em, 3)}
                     </h4>
                 </div> : null}
             </div>
@@ -472,7 +444,7 @@ class ExplorerTable extends React.Component {
                 SubComponent={row => {
                     const qa_pairs = row.original.qa_pairs
                     return (
-                        <ReactTable className="-striped-question -highlight-question"
+                        <ReactTable className="-striped-question -highlight-question" style={{maxHeight: '400px'}}
                         data={qa_pairs}
                         columns={qa_columns}
                         minRows={0}
@@ -507,76 +479,116 @@ class ExplorerTable extends React.Component {
 let renderPassageCell = function(props) {
     let searchWords = [];
     let categoryPerSearchWordIndex = undefined;
+    let spans = [];
+    let categoryPerSpanIndex = undefined;
     let highlightClassNamePerCategory = undefined;
     const activeQuestionId = this.state.activeQuestions[props.original.passage_id];
     if (activeQuestionId) {
         const qa_pair = props.original.qa_pairs
                         .find(qa_pair => qa_pair.query_id === activeQuestionId);
         if (qa_pair) {
-            const selectedAnswer = qa_pair.answer;
-            // TODO: Would be best to use the best aligned answer including the additional answers.
+            searchWords = [...qa_pair.evaluationAnswers[qa_pair.maximizingGroundTruthIndex]];
 
-            const answerType = getAnswerField(selectedAnswer)
-            searchWords = (answerType.key === 'number') ? 
-                [Number(selectedAnswer.number).toString()] : [...selectedAnswer.spans]
-
-            categoryPerSearchWordIndex = searchWords.map(searchWord => 'gold_0')
+            categoryPerSearchWordIndex = searchWords.map(() => 'gold_0')
             highlightClassNamePerCategory = {'gold_0': 'highlight-gold'}
 
-            const prediction = qa_pair.prediction;
-            if (prediction) {
-                searchWords.push(...prediction);
-                categoryPerSearchWordIndex.push(...prediction.map(x => 'prediction_1'));
-                highlightClassNamePerCategory['prediction_1'] = 'highlight-predicted';
-                highlightClassNamePerCategory['gold_0-prediction_1'] = 'highlight-correct'
+            if (qa_pair.prediction) {
+                if (!['arithmetic', 'counting'].includes(qa_pair.predictionType.key)) {
+                    const predictionSpans = qa_pair.predictionSpans;
+                    if (predictionSpans && false) { // TODO: Fix when the prediction file is corrected
+                        spans = predictionSpans;
+                    } else {
+                        const evaluationPrediction = qa_pair.evaluationPrediction;
+                        if (evaluationPrediction) {
+                            searchWords.push(...evaluationPrediction);
+                            categoryPerSearchWordIndex.push(...evaluationPrediction.map(x => 'prediction_1'));
+                        }
+                    }
+
+                    highlightClassNamePerCategory['prediction_1'] = 'highlight-predicted';
+                    highlightClassNamePerCategory['gold_0-prediction_1'] = 'highlight-correct'
+                } else {
+                    searchWords = [];
+                }
             }
         }
     }
     return <WrapDiv><Highlighter 
-            searchWords={searchWords} categoryPerSearchWordIndex={categoryPerSearchWordIndex} 
+            searchWords={searchWords} categoryPerSearchWordIndex={categoryPerSearchWordIndex}
+            //spans={spans} categoryPerSpanIndex={categoryPerSpanIndex}
             highlightClassNamePerCategory={highlightClassNamePerCategory}
             textToHighlight={props.value} /></WrapDiv>
 }
 let renderHighlightableQuestionCell = function(props) {
     let searchWords = [];
-    const highlightClassName = props.column.id === 'prediction' ? 'highlight-predicted' : 'highlight-gold';
+    const highlightClassName = props.column.id === 'displayPrediction' ? 'highlight-predicted' : 'highlight-gold';
     const activeQuestionId = this.state.activeQuestions[props.original.passage_id];
     if (activeQuestionId === props.original.query_id) {        
-        if (props.column.id === 'prediction') {
-            searchWords = props.original.prediction ? props.original.prediction : [];
+        if (props.column.id === 'displayPrediction') {
+            searchWords = props.original.evaluationPrediction;
         } else {
-            const selectedAnswer = props.original.answer;
-            const answerType = getAnswerField(selectedAnswer)
-            searchWords = (answerType.key === 'number') ? 
-                [Number(selectedAnswer.number).toString()] : selectedAnswer.spans
+            searchWords = props.original.evaluationAnswers[props.original.maximizingGroundTruthIndex];
         }
     }
-    return <WrapDiv><Highlighter highlightClassName={highlightClassName} searchWords={searchWords} textToHighlight={props.value} /></WrapDiv>
+    return <WrapDiv><Highlighter highlightClassName={highlightClassName} searchWords={searchWords} textToHighlight={props.value || ''} /></WrapDiv>
+}
+let renderAnswersCell = function(props) {
+    let searchWords = [];
+    const highlightClassName = props.column.id === 'displayPrediction' ? 'highlight-predicted' : 'highlight-gold';
+    const activeQuestionId = this.state.activeQuestions[props.original.passage_id];
+    if (activeQuestionId === props.original.query_id) {        
+        searchWords = props.original.evaluationAnswers[props.original.maximizingGroundTruthIndex];
+    }
+    return <Table style={{height: '100%'}} striped>
+        <tbody>
+            {props.value.map((answer, index) => {
+                return <tr key={index}>
+                    <td style={{whiteSpace: 'pre-wrap', padding: 0, 'borderTop': 0}}>
+                        <WrapDiv><Highlighter highlightClassName={highlightClassName} 
+                            searchWords={props.original.maximizingGroundTruthIndex === index ? searchWords : []} 
+                            textToHighlight={answer} /></WrapDiv>
+                    </td>
+                </tr>
+            })}
+        </tbody>
+    </Table>
+}
+let renderAnswersTypesCell = function(props) {
+    return <Table style={{height: '100%'}} striped>
+        <tbody>
+            {props.value.map((answerType, index) => 
+                <tr key={index}>
+                    <td style={{whiteSpace: 'pre-wrap', padding: 0, 'borderTop': 0}}>
+                        {answerType.value}
+                    </td>
+                </tr>
+            )}
+        </tbody>
+    </Table>
 }
 
 let activeQuestionChange = function(rowInfo, e) {
-    const answerDict = rowInfo.original.answer;
-    const answerType = getAnswerField(answerDict)
-    if (answerType && answerType.key !== 'date') {
+    const passage_id = rowInfo.original.passage_id
+    const query_id = rowInfo.original.query_id
 
-        const passage_id = rowInfo.original.passage_id
-        const query_id = rowInfo.original.query_id
-
-        if (this.state.activeQuestions[passage_id] === query_id) {
-            const activeQuestions = {...this.state.activeQuestions};
-            delete activeQuestions[passage_id]
-            this.setState({
-                activeQuestions
-            });
-        } else {
-            this.setState({
-                activeQuestions: {
-                    //...this.state.activeQuestions, 
-                    [passage_id]: query_id
-                }
-            });
-        }
+    if (this.state.activeQuestions[passage_id] === query_id) {
+        const activeQuestions = {...this.state.activeQuestions};
+        delete activeQuestions[passage_id]
+        this.setState({
+            activeQuestions
+        });
+    } else {
+        this.setState({
+            activeQuestions: {
+                //...this.state.activeQuestions, // controls whether to allow selection of multiple questions accross different paragrahps
+                [passage_id]: query_id
+            }
+        });
     }
+}
+
+function forceDecimalPlaces(num, places) {
+    return num !== undefined ? parseFloat(Math.round(num * Math.pow(10, places)) / Math.pow(10, places)).toFixed(places) : undefined;
 }
 
 export default ExplorerTable;

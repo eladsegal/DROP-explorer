@@ -1,103 +1,65 @@
 
-export const nonAnswerType = {'key': 'none', 'value': 'None'};
-export const answerTypes = [
-    {'key': 'multi_span', 'value': 'Multi Span'},
-    {'key': 'single_span', 'value': 'Single Span'},
-    {'key': 'number', 'value': 'Number'},
-    {'key': 'date', 'value': 'Date'}
-];
-export const predictionTypes = [
-    ...answerTypes,
-    nonAnswerType
+export const noAnswerType = {'key': 'none', 'value': 'None'};
+export const noPredictionType = {'key': 'none', 'value': 'None'};
+export const answerTypesConst = [
+    {'key': 'multi_span', 'value': 'Multi Span', 'accessor': 'spans'},
+    {'key': 'single_span', 'value': 'Single Span', 'accessor': 'spans'},
+    {'key': 'number', 'value': 'Number', 'accessor': 'number'},
+    {'key': 'date', 'value': 'Date', 'accessor': 'date'}
 ];
 
-export function getAnswerType(answerDict) {
-    let answerType = nonAnswerType;
-
-    const span_count = answerDict['spans'].length
-    if (span_count > 0) {
-        if (span_count === 1) {
-            answerType = 'single_span'
+export function getAnswerStringForDisplayAndType(answer) {
+    let displayAnswer = '';
+    let answerType = noAnswerType;
+    if ('number' in answer && (answer['number'] === 0 || answer['number'])) {
+        const number = answer['number'];
+        const number_value = Number(number);
+        if (!isNaN(number_value)) {
+            displayAnswer = number_value.toString();
         } else {
-            answerType = 'multi_span'
+            displayAnswer = number;
+        }
+        answerType = answerTypesConst[2]
+    } else if ('spans' in answer && answer['spans'] && answer['spans'].length > 0) {
+        const spans = answer['spans'];
+        if (spans.length === 1) {
+            displayAnswer = spans[0];
+            answerType = answerTypesConst[1];
+        } else {
+            displayAnswer = [...spans].sort().join(' ┆ ');           
+            answerType = answerTypesConst[0];
+        }
+    } else if ('date' in answer && answer['date']) {
+        const date = answer['date']
+        if (['day', 'month', 'year'].some(prop => date[prop] === 0 || date[prop])) {
+            displayAnswer = JSON.stringify(date, null, 2);
+            answerType = answerTypesConst[3]
         }
     }
-    else if (answerDict['number']) {
-        answerType = 'number'
-    } else {
-        const date = answerDict['date']
-        if (date && (date.day || date.month || date.year)) {
-            answerType = 'date';
+    return {'displayAnswer': displayAnswer, answerType}
+}
+
+export function getAnswerForEvaluation(answer) {
+    // based on answer_json_to_strings from drop_eval.py of allennlp
+    let answerForEvaluation;
+    if ('number' in answer && (answer['number'] === 0 || answer['number'])) {
+        const number = answer['number'];
+        const number_value = Number(number);
+        if (!isNaN(number_value)) {
+            answerForEvaluation = [number_value.toString()];
+        } else {
+            answerForEvaluation = [String(number)];
         }
+    } else if ('spans' in answer && answer['spans'] && answer['spans'].length > 0) {
+        answerForEvaluation = answer['spans']
+    } else if ('date' in answer && answer['date']) {
+        const date = answer['date']
+        answerForEvaluation = [];
+        ['day', 'month', 'year'].forEach(prop => {
+            if (date[prop] === 0 || date[prop]) {
+                answerForEvaluation.push(String(date[prop]))
+            }
+        });
     }
-    return answerType;
-}
-
-export function getAnswerField(answerDict) {
-    let answerField = null;
-
-    const span_count = answerDict['spans'].length
-    if (span_count > 0) {
-        answerField = {key: 'spans', name: span_count > 1 ? 'Multi Span' : 'Single Span'}
-    }
-    else if (answerDict['number']) {
-        answerField = {key: 'number', name: 'Number'};
-    } else {
-        const date = answerDict['date']
-        if (date && (date.day || date.month || date.year)) {
-            answerField = {key: 'date', name: 'Date'};
-        }
-    }
-
-    return answerField;
-}
-
-export function getAnswerForDisplay(raw_value) {
-    let value = raw_value;
-    if (Array.isArray(value) && value.length === 1) {
-        value = value[0];
-    } else if (typeof value === 'object') {
-        if (Array.isArray(value)) {
-            value = [...value].sort()
-        }
-        value = JSON.stringify(value, null, 2);
-    } else {
-        value = Number(value)
-    }
-    return value;
-}
-
-export function answerAccessor(qa_pair) {
-    const answer = qa_pair.answer;
-    const answerField = getAnswerField(answer); 
-    if (answerField) {
-        return getAnswerForDisplay(answer[answerField.key]).toString();
-    }
-    return '';
-}
-
-export function answerTypeAccessor(qa_pair) {
-    const answerField = getAnswerField(qa_pair.answer);
-    if (answerField) {
-        return answerField.name;
-    }
-    return '';
-}
-
-export function predictionAccessor(qa_pair) {
-    const prediction = qa_pair.prediction;
-    if (prediction) {
-        return getAnswerForDisplay(qa_pair.prediction).toString();
-    }
-    return '';
-}
-export function predictionTypeAccessor(qa_pair) {
-    const prediction = qa_pair.prediction;
-    if (prediction) {
-        const answerField = getAnswerField({'spans': prediction});
-        if (answerField) {
-            return answerField.name;
-        }
-    }
-    return '';
+    return answerForEvaluation.sort();
 }

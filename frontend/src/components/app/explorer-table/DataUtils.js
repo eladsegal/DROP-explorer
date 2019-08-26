@@ -1,5 +1,5 @@
-import { answerTypes, getAnswerType, 
-    answerAccessor, predictionAccessor, nonAnswerType } from '../AnswersUtils';
+import { answerTypesConst, getAnswerStringForDisplayAndType, getAnswerForEvaluation,
+    noAnswerType, noPredictionType } from '../AnswersUtils';
 import { intersect } from '../../Utils';
 
 export function processDataHelper(dataset, predictions) {
@@ -8,8 +8,8 @@ export function processDataHelper(dataset, predictions) {
     let hasValidPredictions = false;
     let passage_id_to_displayIndex = {};
     let passage_id_to_queries_displayIndexes = {};
-
-    let data;
+    let predictionTypes = []
+    let data = [];
     if (dataset) {
         const reduced = dataset.reduce(process_row, {
             data: [],
@@ -23,7 +23,7 @@ export function processDataHelper(dataset, predictions) {
         passage_id_to_queries_displayIndexes = reduced.passage_id_to_queries_displayIndexes;
 
         if (predictions) {
-            hasValidPredictions = true;
+            const keyToPredictionType = {}
             for (let i=0; i < predictions.length; i++) {
                 const prediction = predictions[i];
 
@@ -36,36 +36,69 @@ export function processDataHelper(dataset, predictions) {
 
                     const query_displayIndex = passage_id_to_queries_displayIndexes[passage_id][query_id];
                     if (query_displayIndex !== undefined) {
+                        hasValidPredictions = true;
                         const qa_pair = row.qa_pairs[passage_id_to_queries_displayIndexes[passage_id][query_id]]
 
-                        qa_pair.prediction = prediction.answer.value;
-                        qa_pair.f1 = forceTwoDecimalPlaces(prediction.f1);
-                        qa_pair.em = forceTwoDecimalPlaces(prediction.em);
-                        qa_pair.loss = forceTwoDecimalPlaces(prediction.loss);
+                        let predictionType = keyToPredictionType[prediction.predicted_ability]
+                        if (!predictionType) {
+                            predictionType = keyToPredictionType[prediction.predicted_ability] = {
+                                'key': prediction.predicted_ability, 
+                                'value': prediction.predicted_ability
+                            };
+                            predictionTypes.push(predictionType);
+                        }
+
+                        const predictionValue = prediction.answer.value;
+
+                        qa_pair.prediction = Array.isArray(predictionValue) ? predictionValue : [predictionValue];
+                        qa_pair.displayPrediction = getAnswerStringForDisplayAndType({'spans': qa_pair.prediction}).displayAnswer;
+                        qa_pair.evaluationPrediction = getAnswerForEvaluation({'spans': qa_pair.prediction});
+                        qa_pair.predictionType = predictionType;
+                        qa_pair.maximizingGroundTruth = prediction.maximizing_ground_truth.sort();
+                        qa_pair.f1 = prediction.f1;
+                        qa_pair.em = prediction.em;
+                        qa_pair.loss = prediction.loss;
+
+                        const maximizingGroundTruth = qa_pair.maximizingGroundTruth;
+                        const maximizingGroundTruthIndex = qa_pair.evaluationAnswers.findIndex(evaluationAnswer => {
+                            if (evaluationAnswer.length !== maximizingGroundTruth.length) {
+                                return false;
+                            }
+                            for (let i = 0; i < evaluationAnswer.length; i++) {
+                                if (evaluationAnswer[i].toLowerCase() !== maximizingGroundTruth[i].toLowerCase()) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        });
+                        if (maximizingGroundTruthIndex !== -1) {
+                            qa_pair.maximizingGroundTruthIndex = maximizingGroundTruthIndex;
+                        }
+                        
+                        const predictionSpans = prediction.answer.spans;
+                        if (predictionSpans) {
+                            qa_pair.predictionSpans = predictionSpans;
+                        }
                     } else {
-                        hasValidPredictions = false;
-                        break;
+                        continue;
                     }
                 }
                 else {
-                    hasValidPredictions = false;
-                    break;
+                    continue;
                 }
             }
         }
-    } else {
-        data = []
     }
+
+    predictionTypes.sort()
+    predictionTypes.push(noAnswerType)
 
     return {
         data,
         hasValidatedAnswers,
-        hasValidPredictions
+        hasValidPredictions,
+        predictionTypes
     };
-}
-
-function forceTwoDecimalPlaces(num) {
-    return num !== undefined ? parseFloat(Math.round(num * 100) / 100).toFixed(2) : undefined;
 }
 
 function process_row(accumulator, row, index) {
@@ -107,15 +140,53 @@ function process_qa_pair(accumulator, qa_pair, query_index) {
         accumulator.hasValidatedAnswers = true;
     }
 
-    if (getAnswerType(qa_pair.answer) !== nonAnswerType) {
-        accumulator.qa_pairs.push({
-            ...qa_pair,
-            query_index,
-            passage_id
-        })
-        accumulator.query_id_to_displayIndex[qa_pair.query_id] = query_displayIndex;
+    const {displayAnswer: firstDisplayAnswer, answerType: firstAnswerType} = getAnswerStringForDisplayAndType(qa_pair.answer);
+    const displayAnswers = [firstDisplayAnswer];
+    const answersTypes = [firstAnswerType];
+
+    const evaluationAnswers = [getAnswerForEvaluation(qa_pair.answer)]
+
+    if (firstAnswerType === noAnswerType) {
+        return accumulator;
     }
 
+    if (qa_pair.validated_answers && qa_pair.validated_answers.length > 0) {
+        qa_pair.validated_answers.forEach(validatedAnswer => {
+            const evaluationAnswer = getAnswerForEvaluation(validatedAnswer)
+
+            const alreadyAdded = evaluationAnswers.some(addedEvaluationAnswer => {
+                if (addedEvaluationAnswer.length !== evaluationAnswer.length) {
+                    return false;
+                }
+                for (let i = 0; i < evaluationAnswer.length; i++) {
+                    if (evaluationAnswer[i].toLowerCase() !== addedEvaluationAnswer[i].toLowerCase()) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            if (!alreadyAdded) {
+                const {displayAnswer, answerType} = getAnswerStringForDisplayAndType(validatedAnswer);
+                displayAnswers.push(displayAnswer);
+                answersTypes.push(answerType);
+
+                evaluationAnswers.push(getAnswerForEvaluation(validatedAnswer));
+            }
+        });
+    }
+    
+    accumulator.qa_pairs.push({
+        ...qa_pair,
+        evaluationAnswers,
+        displayAnswers,
+        answersTypes,
+        maximizingGroundTruthIndex: 0,
+        query_index,
+        passage_id
+    })
+    accumulator.query_id_to_displayIndex[qa_pair.query_id] = query_displayIndex;
+    
     return accumulator;
 }
 
@@ -143,11 +214,12 @@ export function filterDataHelper(internals, filteredAnswerTypes, filteredPredict
 
     if (!filteredDataPerFilter.answerTypes) {
         if (filteredAnswerTypes.length > 0) {
-            if (filteredAnswerTypes.length < answerTypes.length) {
-                const reduced = data.reduce(answerTypeFilterReudcer_rows, {
+            if (filteredAnswerTypes.length < answerTypesConst.length) {
+                const reduced = data.reduce(typeFilterReudcer_rows, {
                     filteredData: [],
-                    filteredAnswerTypes,
-                    answerField: 'answer'
+                    filteredTypes: filteredAnswerTypes,
+                    fields: ['answersTypes'],
+                    missingValue: noAnswerType
                 });
                 const result = reduced.filteredData;
 
@@ -160,10 +232,11 @@ export function filterDataHelper(internals, filteredAnswerTypes, filteredPredict
 
     if (internals.hasValidPredictions && !filteredDataPerFilter.predictionTypes) {
         if (filteredPredictionTypes.length > 0) {
-            const reduced = data.reduce(answerTypeFilterReudcer_rows, {
+            const reduced = data.reduce(typeFilterReudcer_rows, {
                 filteredData: [],
-                filteredAnswerTypes: filteredPredictionTypes,
-                answerField: 'prediction'
+                filteredTypes: filteredPredictionTypes,
+                fields: ['predictionType'],
+                missingValue: noPredictionType
             });
             const result = reduced.filteredData;
 
@@ -180,10 +253,47 @@ export function filterDataHelper(internals, filteredAnswerTypes, filteredPredict
     }
 
     // Add mean metrics for passage and overall?
+    const metrics = {
+        questionsCount: 0,
+        predictedCount: 0,
+        f1: 0,
+        em: 0
+    }
+
+    for (let i=0; i < filteredData.length; i++) {
+        const row = filteredData[i];
+
+        metrics.questionsCount += row.qa_pairs.length;
+
+        let row_predicted = 0;
+        let row_f1 = 0;
+        let row_em = 0;
+        if (internals.hasValidPredictions) {
+            for (let j=0; j < row.qa_pairs.length; j++) {
+                const qa_pair = row.qa_pairs[j];
+    
+                if (qa_pair.prediction) {
+                    row_predicted += 1;
+                    row_f1 += qa_pair.f1;
+                    row_em += qa_pair.em;
+                }
+            }
+        }
+        metrics.f1 += row_f1;
+        metrics.em += row_em;
+        metrics.predictedCount += row_predicted;
+
+        row.f1 = row_f1 / row_predicted;
+        row.em = row_em / row_predicted;
+    }
+    metrics.f1 /= metrics.predictedCount;
+    metrics.em /= metrics.predictedCount;
+
 
     return {
         filteredData,
-        filteredDataPerFilter
+        filteredDataPerFilter,
+        metrics
     };
 }
 
@@ -259,34 +369,48 @@ function searchReudcer_rows(accumulator, row) {
 function isQuestionTextSearchValid(qa_pair, searchText, hasValidPredictions) {
     let result = qa_pair.question.toLowerCase().includes(searchText) ||
                 qa_pair.query_id.toLowerCase().includes(searchText);
-
     if (result) {
         return true;
     }
 
-    const displayedAnswer = answerAccessor(qa_pair);
-    result = (displayedAnswer && displayedAnswer.toLowerCase().includes(searchText));
+    for (let i = 0; i < qa_pair.evaluationAnswers.length; i++) {
+        const evaluationAnswer = qa_pair.evaluationAnswers[i];
+        for (let j = 0; j < evaluationAnswer.length; j++) {
+            result |= evaluationAnswer[j].toLowerCase().includes(searchText);
 
+            if (result) {
+                break;
+            }
+        }
+        if (result) {
+            break;
+        }
+    }
     if (result) {
         return true;
     }
 
     if (hasValidPredictions) {
-        const displayedPrediction = predictionAccessor(qa_pair);
-        result = (displayedPrediction && displayedPrediction.toLowerCase().includes(searchText));    
+        const evaluationPrediction = qa_pair.evaluationPrediction;
+        if (evaluationPrediction) {
+            result = evaluationPrediction.some(x => {
+                x.toLowerCase().includes(searchText)
+            });
+        }
     }
 
     return result;
 }
 
-// Answer Type Filtering
-function answerTypeFilterReudcer_rows(accumulator, row) {
-    const filteredAnswerTypes = accumulator.filteredAnswerTypes;
+// Type Filtering
+function typeFilterReudcer_rows(accumulator, row) {
+    const filteredTypes = accumulator.filteredTypes;
 
-    const { filtered_qa_pairs } = row.qa_pairs.reduce(answerTypeFilterReudcer_qa_pairs, {
+    const { filtered_qa_pairs } = row.qa_pairs.reduce(typeFilterReudcer_qa_pairs, {
         filtered_qa_pairs: [],
-        filteredAnswerTypes,
-        answerField: accumulator.answerField
+        filteredTypes,
+        fields: accumulator.fields,
+        missingValue: accumulator.missingValue
     });
 
     const hasQuestions = filtered_qa_pairs.length > 0;
@@ -300,11 +424,37 @@ function answerTypeFilterReudcer_rows(accumulator, row) {
     }
     return accumulator;
 }
-function answerTypeFilterReudcer_qa_pairs(accumulator, qa_pair) {
-    const filteredAnswerTypes = accumulator.filteredAnswerTypes;
+function typeFilterReudcer_qa_pairs(accumulator, qa_pair) {
+    const filteredTypes = accumulator.filteredTypes;
+    const fields = accumulator.fields;
 
-    const answerTypeValid = filterByAnswerType_qa_pair(qa_pair, filteredAnswerTypes, accumulator.answerField);
-    const isValid = answerTypeValid;
+    let typeValid = false;
+    for (let i = 0; i < fields.length; i++) {
+        const field = fields[i];
+
+        const obj = qa_pair[field] ? qa_pair[field] : accumulator.missingValue;
+        if (Array.isArray(obj)) {
+            const arr = obj;
+            for (let j = 0; j < arr.length; j++) {
+                const value = arr[j];
+                typeValid = filteredTypes.includes(value.key);
+                if (typeValid) {
+                    break;
+                }
+            }
+            if (typeValid) {
+                break;
+            } 
+        } else {
+            const value = obj;
+            typeValid = filteredTypes.includes(value.key);
+            if (typeValid) {
+                break;
+            }
+        }
+    }
+    
+    const isValid = typeValid;
 
     if (isValid) {
         accumulator.filtered_qa_pairs.push({
@@ -313,18 +463,4 @@ function answerTypeFilterReudcer_qa_pairs(accumulator, qa_pair) {
     }
 
     return accumulator;
-}
-function filterByAnswerType_qa_pair(qa_pair, filteredAnswerTypes, answerField) {
-    let answerType;
-    if (answerField === 'prediction') {
-        const prediction = qa_pair.prediction;
-        answerType = prediction ? getAnswerType({'spans': qa_pair.prediction}) : nonAnswerType.key;
-    } else {
-        answerType = getAnswerType(qa_pair[answerField]);
-    }
-
-    if (filteredAnswerTypes.includes(answerType)) {
-        return true;
-    }
-    return false;
 }

@@ -4,6 +4,7 @@ import {
     FormGroup,
     Label
 } from 'reactstrap';
+import { isChanged } from '../Utils';
 
 class CheckboxList extends React.PureComponent {
     constructor(props) {
@@ -15,7 +16,11 @@ class CheckboxList extends React.PureComponent {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        this.props.onChange(this.state.checked);
+        if (isChanged(['checked'], prevProps, this.props)) {
+            this.setState({ checked: this.props.checked }, () => {
+                this.props.onChange(this.state.checked)
+            });
+        }
     }
 
     change(e) {
@@ -28,7 +33,7 @@ class CheckboxList extends React.PureComponent {
         } else {
             newChecked = [...this.state.checked, changedKey];
         }
-        this.setState({ checked: newChecked });
+        this.setState({ checked: newChecked }, () => this.props.onChange(this.state.checked));
     }
 
     render() {
