@@ -1,12 +1,11 @@
 import React from 'react';
 import {
     Input,
-    FormGroup,
-    Label,
     ListGroup,
     ListGroupItem,
     Button
 } from 'reactstrap';
+import Checkbox from '../../checkbox/Checkbox';
 
 class SearchFilter extends React.PureComponent {
     constructor(props) {
@@ -39,8 +38,8 @@ class SearchFilter extends React.PureComponent {
         this.setState(newState);
     }
 
-    filterQuestionsChange(e) {
-        const filterQuestions = e.currentTarget.getAttribute('filter-questions') !== true.toString();
+    filterQuestionsChange(newChecked) {
+        const filterQuestions = newChecked;
         const newState = { draftFilterQuestions: filterQuestions }
         if (this.props.instantSearch) {
             newState.filterQuestions = newState.draftFilterQuestions;
@@ -59,19 +58,12 @@ class SearchFilter extends React.PureComponent {
             return <div>
                 <ListGroup>
                     <ListGroupItem>
-                        <Input type='text' id='searchBox' value={this.state.draftSearchText} onChange={this.searchTextChange} />
+                        <Input type='text' value={this.state.draftSearchText} onChange={this.searchTextChange} />
                     </ListGroupItem>
                     <ListGroupItem>
-                        <FormGroup check>
-                            <Label check>
-                                <Input type="checkbox" 
-                                onChange={this.filterQuestionsChange}
-                                filter-questions={(this.state.draftFilterQuestions && 
-                                    this.state.draftFilterQuestions.toString()) || false.toString()} 
-                                checked={this.state.draftFilterQuestions || false} 
-                                />Filter Questions
-                            </Label>
-                        </FormGroup>
+                        <Checkbox text={'Filter Questions'} 
+                                checked={this.state.draftFilterQuestions}
+                                onChange={this.filterQuestionsChange}></Checkbox>
                     </ListGroupItem>
                 </ListGroup>
                 {!this.props.instantSearch ? 

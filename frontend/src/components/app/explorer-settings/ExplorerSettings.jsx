@@ -15,21 +15,28 @@ import { shouldUpdate, isChanged } from '../../Utils';
 import { answerTypesConst } from '../AnswersUtils';
 import SearchFilter from './SearchFilter';
 import CheckboxList from '../../checkbox_list/CheckboxList';
+import RangeInput from '../../range_input/RangeInput';
+import Checkbox from '../../checkbox/Checkbox';
 
 const props_updateSignals = ['predictionTypes']
-const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'filteredPredictionTypes', 'searchProps']
+const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'answerTypeFilterFirstOnly', 'filteredPredictionTypes', 'searchProps', 'F1Range', 'EMRange']
 class ExplorerSettings extends React.Component {
     constructor(props) {
         super(props);
         this.datasetChange = this.datasetChange.bind(this);
         this.predictionsChange = this.predictionsChange.bind(this);
         this.filteredAnswerTypesChange = this.filteredAnswerTypesChange.bind(this);
+        this.answerTypeFilterFirstOnlyChange = this.answerTypeFilterFirstOnlyChange.bind(this);
         this.filteredPredictionTypesChange = this.filteredPredictionTypesChange.bind(this);
         this.searchFilterChange = this.searchFilterChange.bind(this);
+        this.rangeFilterChange = this.rangeFilterChange.bind(this);
         this.state = {
             filteredAnswerTypes: this.props.filteredAnswerTypes,
+            answerTypeFilterFirstOnly: this.props.answerTypeFilterFirstOnly,
             filteredPredictionTypes: this.props.filteredPredictionTypes,
-            searchProps: this.props.searchProps
+            searchProps: this.props.searchProps,
+            F1Range: this.props.F1Range,
+            EMRange: this.props.EMRange
         };
     }
 
@@ -60,12 +67,20 @@ class ExplorerSettings extends React.Component {
         this.setState({ filteredAnswerTypes });
     }
     
+    answerTypeFilterFirstOnlyChange(answerTypeFilterFirstOnly) {
+        this.setState({ answerTypeFilterFirstOnly });
+    }
+
     filteredPredictionTypesChange(filteredPredictionTypes) {
         this.setState({ filteredPredictionTypes });
     }
 
     searchFilterChange(searchProps) {
         this.setState({ searchProps });
+    }
+
+    rangeFilterChange(metric, range) {
+        this.setState({ [`${metric}Range`]: range });
     }
 
     render() {
@@ -111,7 +126,12 @@ class ExplorerSettings extends React.Component {
                     </CardBody>
                 </Card>
                 <Card className='col-sm-2 p-0'>
-                    <CardHeader>Filter Answer Type</CardHeader>
+                    <CardHeader style={{display: 'flex', justifyContent: 'space-between'}}>
+                        <span style={{paddingRight: '3px'}}>Answer Type Filter</span>
+                        <Checkbox text={'Primary Only'} style={{fontSize: 'smaller'}}
+                                checked={this.state.answerTypeFilterFirstOnly}
+                                onChange={this.answerTypeFilterFirstOnlyChange}></Checkbox>
+                    </CardHeader>
                     <CardBody>
                         <CheckboxList onChange={this.filteredAnswerTypesChange} checked={this.state.filteredAnswerTypes} options={answerTypesConst}></CheckboxList>
                     </CardBody>
@@ -135,6 +155,19 @@ class ExplorerSettings extends React.Component {
                     <CardHeader>Prediction Head</CardHeader>
                     <CardBody>
                         <CheckboxList onChange={this.filteredPredictionTypesChange} checked={this.state.filteredPredictionTypes} options={this.props.predictionTypes}></CheckboxList>
+                    </CardBody>
+                </Card> : null}
+                {this.state.predictions ? <Card className='col-sm-2 p-0'>
+                    <CardHeader>Score Filter</CardHeader>
+                    <CardBody>
+                    <ListGroup>
+                    <ListGroupItem>
+                        <RangeInput metric='F1' initial={this.props.F1Range} onChange={this.rangeFilterChange}></RangeInput>
+                    </ListGroupItem>
+                    <ListGroupItem>
+                        <RangeInput metric='EM' initial={this.props.EMRange} onChange={this.rangeFilterChange}></RangeInput>
+                    </ListGroupItem>
+                    </ListGroup>
                     </CardBody>
                 </Card> : null}
             </CardGroup>

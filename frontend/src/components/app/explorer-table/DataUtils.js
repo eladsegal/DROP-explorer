@@ -193,8 +193,7 @@ function process_qa_pair(accumulator, qa_pair, query_index) {
 }
 
 
-export function filterDataHelper(internals, filteredAnswerTypes, filteredPredictionTypes, searchProps) {
-
+export function filterDataHelper(internals, filteredAnswerTypes, answerTypeFilterFirstOnly, filteredPredictionTypes, searchProps, F1Range, EMRange) {
     const data = internals.data; 
     const filteredDataPerFilter = internals.filteredDataPerFilter;       
 
@@ -221,7 +220,8 @@ export function filterDataHelper(internals, filteredAnswerTypes, filteredPredict
                     filteredData: [],
                     filteredTypes: filteredAnswerTypes,
                     fields: ['answersTypes'],
-                    missingValue: noAnswerType
+                    missingValue: noAnswerType,
+                    firstOnly: answerTypeFilterFirstOnly
                 });
                 const result = reduced.filteredData;
 
@@ -245,6 +245,38 @@ export function filterDataHelper(internals, filteredAnswerTypes, filteredPredict
             filteredDataPerFilter.predictionTypes = result;
         } else {
             filteredDataPerFilter.predictionTypes = [];
+        }
+    }
+
+    if (internals.hasValidPredictions && !filteredDataPerFilter.F1Range) {
+        const range = F1Range;
+        if (range.low <= range.high) {
+            const reduced = data.reduce(rangeFilterReudcer_rows, {
+                filteredData: [],
+                range,
+                field: 'f1'
+            });
+            const result = reduced.filteredData;
+
+            filteredDataPerFilter.F1Range = result;
+        } else {
+            filteredDataPerFilter.F1Range = [];
+        }
+    }
+
+    if (internals.hasValidPredictions && !filteredDataPerFilter.EMRange) {
+        const range = EMRange;
+        if (range.low <= range.high) {
+            const reduced = data.reduce(rangeFilterReudcer_rows, {
+                filteredData: [],
+                range,
+                field: 'em'
+            });
+            const result = reduced.filteredData;
+
+            filteredDataPerFilter.EMRange = result;
+        } else {
+            filteredDataPerFilter.EMRange = [];
         }
     }
 
@@ -285,11 +317,18 @@ export function filterDataHelper(internals, filteredAnswerTypes, filteredPredict
         metrics.em += row_em;
         metrics.predictedCount += row_predicted;
 
-        row.f1 = row_f1 / row_predicted;
-        row.em = row_em / row_predicted;
+        if (row_predicted > 0) {
+            row.f1 = row_f1 / row_predicted;
+            row.em = row_em / row_predicted;
+        }
     }
-    metrics.f1 /= metrics.predictedCount;
-    metrics.em /= metrics.predictedCount;
+    if (metrics.predictedCount > 0) {
+        metrics.f1 /= metrics.predictedCount;
+        metrics.em /= metrics.predictedCount;
+    } else {
+        metrics.f1 = undefined;
+        metrics.em = undefined;
+    }
 
 
     return {
@@ -412,7 +451,8 @@ function typeFilterReudcer_rows(accumulator, row) {
         filtered_qa_pairs: [],
         filteredTypes,
         fields: accumulator.fields,
-        missingValue: accumulator.missingValue
+        missingValue: accumulator.missingValue,
+        firstOnly: accumulator.firstOnly
     });
 
     const hasQuestions = filtered_qa_pairs.length > 0;
@@ -429,6 +469,7 @@ function typeFilterReudcer_rows(accumulator, row) {
 function typeFilterReudcer_qa_pairs(accumulator, qa_pair) {
     const filteredTypes = accumulator.filteredTypes;
     const fields = accumulator.fields;
+    const firstOnly = accumulator.firstOnly;
 
     let typeValid = false;
     for (let i = 0; i < fields.length; i++) {
@@ -441,6 +482,9 @@ function typeFilterReudcer_qa_pairs(accumulator, qa_pair) {
                 const value = arr[j];
                 typeValid = filteredTypes.includes(value.key);
                 if (typeValid) {
+                    break;
+                }
+                if (firstOnly) {
                     break;
                 }
             }
@@ -457,6 +501,50 @@ function typeFilterReudcer_qa_pairs(accumulator, qa_pair) {
     }
     
     const isValid = typeValid;
+
+    if (isValid) {
+        accumulator.filtered_qa_pairs.push({
+            ...qa_pair
+        });
+    }
+
+    return accumulator;
+}
+
+// Range Filtering
+function rangeFilterReudcer_rows(accumulator, row) {
+    const range = accumulator.range;
+
+    const { filtered_qa_pairs } = row.qa_pairs.reduce(rangeFilterReudcer_qa_pairs, {
+        filtered_qa_pairs: [],
+        range,
+        field: accumulator.field
+    });
+
+    const hasQuestions = filtered_qa_pairs.length > 0;
+    const isValid = hasQuestions;
+
+    if (isValid) {
+        accumulator.filteredData.push({
+            ...row,
+            qa_pairs: filtered_qa_pairs,
+        });
+    }
+    return accumulator;
+}
+function rangeFilterReudcer_qa_pairs(accumulator, qa_pair) {
+    const range = accumulator.range;
+    const field = accumulator.field;
+
+    let rangeValid = false;
+    if (qa_pair[field] !== undefined) {
+        const value = qa_pair[field]
+        rangeValid = value >= range.low && value <= range.high;
+    } else {
+        rangeValid = true;
+    }    
+
+    const isValid = rangeValid;
 
     if (isValid) {
         accumulator.filtered_qa_pairs.push({

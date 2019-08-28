@@ -21,7 +21,9 @@ const initialInternals = {
     filteredDataPerFilter: {
         answerTypes: undefined,
         predictionTypes: undefined,
-        search: undefined
+        search: undefined,
+        F1Range: undefined,
+        EMRange: undefined
     },
     predictionTypes: [],
 
@@ -40,7 +42,7 @@ const initialState = {
     questionSorted: []
 };
 
-const filterProps = ['filteredAnswerTypes', 'filteredPredictionTypes', 'searchProps']
+const filterProps = ['filteredAnswerTypes', 'answerTypeFilterFirstOnly', 'filteredPredictionTypes', 'searchProps', 'F1Range', 'EMRange']
 const props_updateSignals = ['dataset', 'predictions', ...filterProps]
 const state_updateSignals = ['page', 'passagesPageSize', 'questionsPageSize', 'expanded_passage_ids', 'activeQuestions', 'questionResized', 'questionSorted']
 class ExplorerTable extends React.Component {
@@ -95,10 +97,14 @@ class ExplorerTable extends React.Component {
              this.setInternals({data: undefined, filteredData: undefined});
         } else if (isChanged(filterProps, this.props, nextProps)) {
             // update only the changed filter
-            const filteredAnswerTypesChanged = this.props.filteredAnswerTypes !== nextProps.filteredAnswerTypes;
-            const filteredPredictionTypesChanged = this.props.filteredPredictionTypes !== nextProps.filteredPredictionTypes;
-            const searchPropsChanged = this.props.searchProps !== nextProps.searchProps;
-            const refilteringRequired = filteredAnswerTypesChanged || filteredPredictionTypesChanged || searchPropsChanged;
+            const filteredAnswerTypesChanged = isChanged(['filteredAnswerTypes', 'answerTypeFilterFirstOnly'], this.props, nextProps);
+            const filteredPredictionTypesChanged = isChanged(['filteredPredictionTypes'], this.props, nextProps);
+            const searchPropsChanged = isChanged(['searchProps'], this.props, nextProps);
+            const F1RangeChanged = isChanged(['F1Range'], this.props, nextProps);
+            const EMRangeChanged = isChanged(['EMRange'], this.props, nextProps);
+
+            const refilteringRequired = filteredAnswerTypesChanged || filteredPredictionTypesChanged || 
+                                    searchPropsChanged || F1RangeChanged || EMRangeChanged;
 
             this.setInternals({
                 filteredData: refilteringRequired ? undefined : this.internals.filteredData
@@ -111,6 +117,12 @@ class ExplorerTable extends React.Component {
             }
             if (searchPropsChanged) {
                 this.internals.filteredDataPerFilter.search = undefined;
+            }
+            if (F1RangeChanged) {
+                this.internals.filteredDataPerFilter.F1Range = undefined
+            }
+            if (EMRangeChanged) {
+                this.internals.filteredDataPerFilter.EMRange = undefined
             }
         }
         
@@ -258,16 +270,19 @@ class ExplorerTable extends React.Component {
         });
     }
 
-    filterData(immediatelyAfterDatasetChange) {
+    filterData() {
         const filteredAnswerTypes = this.props.filteredAnswerTypes;
+        const answerTypeFilterFirstOnly = this.props.answerTypeFilterFirstOnly;
         const filteredPredictionTypes = this.props.filteredPredictionTypes;
         const searchProps = this.props.searchProps;
+        const F1Range = this.props.F1Range;
+        const EMRange = this.props.EMRange;
 
         const {
             filteredData,
             filteredDataPerFilter,
             metrics
-        } = filterDataHelper(this.internals, filteredAnswerTypes, filteredPredictionTypes, searchProps, immediatelyAfterDatasetChange);
+        } = filterDataHelper(this.internals, filteredAnswerTypes, answerTypeFilterFirstOnly, filteredPredictionTypes, searchProps, F1Range, EMRange);
         
         this.setInternals({
             filteredData,
@@ -283,16 +298,14 @@ class ExplorerTable extends React.Component {
     render() {
 
         console.time('processData');
-        let immediatelyAfterDatasetChange = false;
         if (!this.internals.data) {
             this.processData();
-            immediatelyAfterDatasetChange = true;
         }
         console.timeEnd('processData');
         
         console.time('filterData');
         if (!this.internals.filteredData) {
-            this.filterData(immediatelyAfterDatasetChange);
+            this.filterData();
         }        
         console.timeEnd('filterData');
 

@@ -3,11 +3,9 @@ import DatasetLocalSelector from './DatasetLocalSelector';
 import DatasetListSelector from './DatasetListSelector';
 import {
     ListGroup,
-    ListGroupItem,
-    Input,
-    FormGroup,
-    Label
+    ListGroupItem
 } from 'reactstrap';
+import Checkbox from '../../../checkbox/Checkbox';
 
 class DatasetLoader extends React.PureComponent {
     constructor(props) {
@@ -26,9 +24,9 @@ class DatasetLoader extends React.PureComponent {
         }
     }
 
-    useLocalDatasetChange(e) {
+    useLocalDatasetChange(newChecked) {
         this.setState({ 
-            useLocalDataset: e.currentTarget.getAttribute('use-local-dataset') !== true.toString(),
+            useLocalDataset: newChecked,
             dataset: undefined
         });
     }
@@ -40,16 +38,9 @@ class DatasetLoader extends React.PureComponent {
     render() {
         return <ListGroup>
                 {this.props.allowSourceSelection ? <ListGroupItem>
-                    <FormGroup check>
-                        <Label check>
-                            <Input type="checkbox" 
-                            onChange={this.useLocalDatasetChange}
-                            use-local-dataset={(this.state.useLocalDataset && 
-                                this.state.useLocalDataset.toString()) || false.toString()} 
-                            checked={this.state.useLocalDataset || false} 
-                            />Use Local Dataset
-                        </Label>
-                    </FormGroup>
+                    <Checkbox text={'Use Local Dataset'} 
+                            checked={this.state.useLocalDataset} 
+                            onChange={this.useLocalDatasetChange}></Checkbox>
                 </ListGroupItem> : null}
                 <ListGroupItem>
                     <DatasetSelector onChange={this.datasetChange} local={this.state.useLocalDataset}/>

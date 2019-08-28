@@ -10,7 +10,10 @@ import ExplorerSettings from './explorer-settings/ExplorerSettings';
 import ExplorerTable from './explorer-table/ExplorerTable';
 
 const props_updateSignals = []
-const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'predictionTypes', 'filteredPredictionTypes', 'searchProps', 'navbarSticky', 'isOpen']
+const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'answerTypeFilterFirstOnly',
+                            'predictionTypes', 'filteredPredictionTypes', 'searchProps', 
+                            'F1Range', 'EMRange',
+                            'navbarSticky', 'isOpen']
 class App extends React.Component {
     constructor(props) {
         super(props);
@@ -25,6 +28,7 @@ class App extends React.Component {
             useLocalDataset: false,
             allowSourceSelection: true,
             filteredAnswerTypes: ['multi_span', 'single_span', 'number', 'date'],
+            answerTypeFilterFirstOnly: true,
             predictionTypes: [],
             filteredPredictionTypes: [],
             instantSearch: true,
@@ -32,6 +36,8 @@ class App extends React.Component {
                 searchText: '',
                 filterQuestions: false
             },
+            F1Range: { low: 0.0, high: 1.0 },
+            EMRange: { low: 0.0, high: 1.0 },
             navbarSticky: undefined, // can be 'top' or undefined
             isOpen: true,
             showNavbarImage: false,
@@ -56,10 +62,13 @@ class App extends React.Component {
     settingsChange(settings) {
         this.setState({
             filteredAnswerTypes: settings.filteredAnswerTypes,
+            answerTypeFilterFirstOnly: settings.answerTypeFilterFirstOnly,
             filteredPredictionTypes: settings.filteredPredictionTypes,
             searchProps: settings.searchProps,
             dataset: settings.dataset,
-            predictions: settings.predictions
+            predictions: settings.predictions,
+            F1Range: settings.F1Range,
+            EMRange: settings.EMRange
         });
     }
     
@@ -109,10 +118,13 @@ class App extends React.Component {
                                 expandAllFunc={this.state.expandAllFunc}
                                 collapseAllFunc={this.state.collapseAllFunc}
                                 filteredAnswerTypes={this.state.filteredAnswerTypes}
+                                answerTypeFilterFirstOnly={this.state.answerTypeFilterFirstOnly}
                                 filteredPredictionTypes={this.state.filteredPredictionTypes}
                                 predictionTypes={this.state.predictionTypes}
                                 instantSearch={this.state.instantSearch}
                                 searchProps={this.state.searchProps}
+                                F1Range={this.state.F1Range}
+                                EMRange={this.state.EMRange}
                                 clearSelectedAnswersFunc={this.state.clearSelectedAnswersFunc} />
                         </Collapse>
                     </Navbar>
@@ -120,8 +132,11 @@ class App extends React.Component {
                         dataset={this.state.dataset} 
                         predictions={this.state.predictions}
                         filteredAnswerTypes={this.state.filteredAnswerTypes}
+                        answerTypeFilterFirstOnly={this.state.answerTypeFilterFirstOnly}
                         filteredPredictionTypes={this.state.filteredPredictionTypes}
                         searchProps={this.state.searchProps}
+                        F1Range={this.state.F1Range}
+                        EMRange={this.state.EMRange}
                         sendClearSelectedAnswersFunc={this.getClearSelectedAnswersFunc}
                         sendExpandAllFunc={this.getExpandAllFunc}
                         sendCollapseAllFunc={this.getCollapseAllFunc}
