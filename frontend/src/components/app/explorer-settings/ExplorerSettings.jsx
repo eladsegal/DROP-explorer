@@ -162,10 +162,10 @@ class ExplorerSettings extends React.Component {
                     <CardBody>
                     <ListGroup>
                     <ListGroupItem>
-                        <RangeInput metric='F1' initial={this.props.F1Range} onChange={this.rangeFilterChange}></RangeInput>
+                        <RangeInput metric='F1' initial={this.props.F1Range} step='0.01' onChange={this.rangeFilterChange}></RangeInput>
                     </ListGroupItem>
                     <ListGroupItem>
-                        <RangeInput metric='EM' initial={this.props.EMRange} onChange={this.rangeFilterChange}></RangeInput>
+                        <RangeInput metric='EM' initial={this.props.EMRange} step='0.01' onChange={this.rangeFilterChange}></RangeInput>
                     </ListGroupItem>
                     </ListGroup>
                     </CardBody>
