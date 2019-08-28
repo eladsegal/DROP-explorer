@@ -37,7 +37,14 @@ export function processDataHelper(dataset, predictions) {
                     const query_displayIndex = passage_id_to_queries_displayIndexes[passage_id][query_id];
                     if (query_displayIndex !== undefined) {
                         hasValidPredictions = true;
-                        const qa_pair = row.qa_pairs[passage_id_to_queries_displayIndexes[passage_id][query_id]]
+                        let qa_pair = row.qa_pairs[passage_id_to_queries_displayIndexes[passage_id][query_id]]
+                        if (qa_pair.prediction) {
+                            // only needed because there's a duplication of query_id in the dev dataset
+                            qa_pair = row.qa_pairs.find(q => q.query_id === qa_pair.query_id && !q.prediction)
+                            if (!qa_pair) {
+                                continue;
+                            }
+                        }
 
                         let predictionType = keyToPredictionType[prediction.predicted_ability]
                         if (!predictionType) {
