@@ -75,7 +75,7 @@ export function processDataHelper(dataset, predictions) {
                             qa_pair.maximizingGroundTruthIndex = maximizingGroundTruthIndex;
                         }
                         
-                        const predictionSpans = prediction.answer.spans;
+                        const predictionSpans = prediction.answer.spans && prediction.answer.spans.length > 0;
                         if (predictionSpans) {
                             qa_pair.predictionSpans = predictionSpans;
                         }

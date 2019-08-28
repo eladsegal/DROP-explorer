@@ -496,14 +496,15 @@ let renderPassageCell = function(props) {
 
             if (qa_pair.prediction) {
                 if (!['arithmetic', 'counting'].includes(qa_pair.predictionType.key)) {
-                    const predictionSpans = qa_pair.predictionSpans;
-                    if (predictionSpans && false) { // TODO: Fix when the prediction file is corrected
+                    const predictionSpans = undefined; //qa_pair.predictionSpans;
+                    if (predictionSpans) { // TODO: Fix when the prediction file is corrected
                         spans = predictionSpans;
+                        categoryPerSpanIndex.push(...(spans.map(x => 'prediction_1')))
                     } else {
                         const evaluationPrediction = qa_pair.evaluationPrediction;
                         if (evaluationPrediction) {
                             searchWords.push(...evaluationPrediction);
-                            categoryPerSearchWordIndex.push(...evaluationPrediction.map(x => 'prediction_1'));
+                            categoryPerSearchWordIndex.push(...(evaluationPrediction.map(x => 'prediction_1')));
                         }
                     }
 

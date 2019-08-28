@@ -41,7 +41,7 @@ export function getAnswerStringForDisplayAndType(answer) {
 
 export function getAnswerForEvaluation(answer) {
     // based on answer_json_to_strings from drop_eval.py of allennlp
-    let answerForEvaluation;
+    let answerForEvaluation = [];
     if ('number' in answer && (answer['number'] === 0 || answer['number'])) {
         const number = answer['number'];
         const number_value = Number(number);
