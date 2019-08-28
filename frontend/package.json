@@ -5,17 +5,17 @@
   "homepage": "https://eladsegal.github.io/DROP-explorer",
   "dependencies": {
     "bootstrap": "^4.3.1",
+    "chalk": "^2.4.2",
     "clone-deep": "^4.0.1",
     "gh-pages": "^2.1.1",
     "node-sass": "^4.12.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-highlight-words": "eladsegal/react-highlight-words",
+    "react-highlight-words": "github:eladsegal/react-highlight-words",
     "react-scripts": "3.0.1",
     "react-table": "6.10.0",
     "reactstrap": "^8.0.1",
-    "styled-components": "4.3.2",
-    "chalk": "^2.4.2"
+    "styled-components": "4.3.2"
   },
   "scripts": {
     "predeploy": "npm run build",

@@ -75,8 +75,8 @@ export function processDataHelper(dataset, predictions) {
                             qa_pair.maximizingGroundTruthIndex = maximizingGroundTruthIndex;
                         }
                         
-                        const predictionSpans = prediction.answer.spans && prediction.answer.spans.length > 0;
-                        if (predictionSpans) {
+                        const predictionSpans = prediction.answer.spans;
+                        if (predictionSpans && predictionSpans.length > 0) {
                             qa_pair.predictionSpans = predictionSpans;
                         }
                     } else {
@@ -119,6 +119,7 @@ function process_row(accumulator, row, index) {
     const isValid = hasQuestions;
 
     if (isValid) {
+        row.passage = row.passage.trim();
         const reduced_row = {
             ...row,
             qa_pairs,
@@ -176,6 +177,7 @@ function process_qa_pair(accumulator, qa_pair, query_index) {
         });
     }
     
+    qa_pair.question = qa_pair.question.trim();
     accumulator.qa_pairs.push({
         ...qa_pair,
         evaluationAnswers,

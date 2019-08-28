@@ -32,7 +32,7 @@ class App extends React.Component {
                 searchText: '',
                 filterQuestions: false
             },
-            navbarSticky: 'top', // can be 'top' or undefined
+            navbarSticky: undefined, // can be 'top' or undefined
             isOpen: true,
             showNavbarImage: false,
             // ^ startup settings available for configuration

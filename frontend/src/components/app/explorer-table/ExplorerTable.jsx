@@ -47,8 +47,8 @@ class ExplorerTable extends React.Component {
     constructor(props) {
         super(props);
 
-        renderPassageCell = renderPassageCell.bind(this);
-        renderHighlightableQuestionCell = renderHighlightableQuestionCell.bind(this);
+        renderPassageOrQuestionCell = renderPassageOrQuestionCell.bind(this);
+        renderPredictionCell = renderPredictionCell.bind(this);
         renderAnswersCell = renderAnswersCell.bind(this);
         activeQuestionChange = activeQuestionChange.bind(this);
 
@@ -311,7 +311,7 @@ class ExplorerTable extends React.Component {
             {
                 Header: 'Passage',
                 accessor: 'passage',
-                Cell: renderPassageCell
+                Cell: renderPassageOrQuestionCell
             }, 
             {
                 Header: 'Count',
@@ -351,7 +351,7 @@ class ExplorerTable extends React.Component {
             {
                 Header: 'Question',
                 accessor: 'question',
-                Cell: renderHighlightableQuestionCell
+                Cell: renderPassageOrQuestionCell
             },
             {
                 Header: 'Answer Options',
@@ -371,7 +371,7 @@ class ExplorerTable extends React.Component {
                 Header: 'Prediction',
                 show: this.internals.hasValidPredictions,
                 accessor: 'displayPrediction',
-                Cell: renderHighlightableQuestionCell,
+                Cell: renderPredictionCell,
                 width: 150
             },
             {
@@ -379,8 +379,7 @@ class ExplorerTable extends React.Component {
                 id: 'predictionType',
                 show: this.internals.hasValidPredictions,
                 accessor: qa_pair => qa_pair.predictionType ? qa_pair.predictionType.value : '',
-                width: 110,
-                resizable: false
+                width: 110
             },
             {
                 Header: 'F1',
@@ -478,7 +477,7 @@ class ExplorerTable extends React.Component {
     }
 }
 
-let renderPassageCell = function(props) {
+let renderPassageOrQuestionCell = function(props) {
     let searchWords = [];
     let categoryPerSearchWordIndex = undefined;
     let spans = [];
@@ -486,8 +485,15 @@ let renderPassageCell = function(props) {
     let highlightClassNamePerCategory = undefined;
     const activeQuestionId = this.state.activeQuestions[props.original.passage_id];
     if (activeQuestionId) {
-        const qa_pair = props.original.qa_pairs
+        let qa_pair;
+        if (props.column.id === 'passage') {
+            qa_pair = props.original.qa_pairs
                         .find(qa_pair => qa_pair.query_id === activeQuestionId);
+        } else {
+            if (activeQuestionId === props.original.query_id) {
+                qa_pair = props.original;
+            }
+        }
         if (qa_pair) {
             searchWords = [...qa_pair.evaluationAnswers[qa_pair.maximizingGroundTruthIndex]];
 
@@ -496,48 +502,56 @@ let renderPassageCell = function(props) {
 
             if (qa_pair.prediction) {
                 if (!['arithmetic', 'counting'].includes(qa_pair.predictionType.key)) {
-                    const predictionSpans = undefined; //qa_pair.predictionSpans;
-                    if (predictionSpans) { // TODO: Fix when the prediction file is corrected
-                        spans = predictionSpans;
-                        categoryPerSpanIndex.push(...(spans.map(x => 'prediction_1')))
-                    } else {
-                        const evaluationPrediction = qa_pair.evaluationPrediction;
-                        if (evaluationPrediction) {
-                            searchWords.push(...evaluationPrediction);
-                            categoryPerSearchWordIndex.push(...(evaluationPrediction.map(x => 'prediction_1')));
-                        }
+                    const predictionSpans = qa_pair.predictionSpans;
+                    if (predictionSpans) {
+                        const context = props.column.id === 'passage' ? 'p' : 'q'
+
+                        spans = predictionSpans.reduce((spansAcc, span) => {
+                            if (span[0] === context) {
+                                spansAcc.push([span[1], span[2]]);
+                            }
+                            return spansAcc;
+                        }, [])
+                        categoryPerSpanIndex = spans.map(x => 'focus_2')
+                    }
+
+                    const evaluationPrediction = qa_pair.evaluationPrediction;
+                    if (evaluationPrediction) {
+                        searchWords.push(...evaluationPrediction);
+                        categoryPerSearchWordIndex.push(...(evaluationPrediction.map(x => 'prediction_1')));
                     }
 
                     highlightClassNamePerCategory['prediction_1'] = 'highlight-predicted';
+                    highlightClassNamePerCategory['prediction_1-focus_2'] = 'highlight-predicted-focus-bold';
                     highlightClassNamePerCategory['gold_0-prediction_1'] = 'highlight-correct'
+                    highlightClassNamePerCategory['gold_0-prediction_1-focus_2'] = 'highlight-correct-focus'
                 } else {
                     searchWords = [];
                 }
             }
         }
     }
-    return <WrapDiv><Highlighter 
+    return <WrapDiv><Highlighter autoEscape={true}
             searchWords={searchWords} categoryPerSearchWordIndex={categoryPerSearchWordIndex}
-            //spans={spans} categoryPerSpanIndex={categoryPerSpanIndex}
+            spans={spans} categoryPerSpanIndex={categoryPerSpanIndex}
             highlightClassNamePerCategory={highlightClassNamePerCategory}
             textToHighlight={props.value} /></WrapDiv>
 }
-let renderHighlightableQuestionCell = function(props) {
+let renderPredictionCell = function(props) {
     let searchWords = [];
-    const highlightClassName = props.column.id === 'displayPrediction' ? 'highlight-predicted' : 'highlight-gold';
-    const activeQuestionId = this.state.activeQuestions[props.original.passage_id];
-    if (activeQuestionId === props.original.query_id) {        
-        if (props.column.id === 'displayPrediction') {
-            searchWords = props.original.evaluationPrediction;
-        } else {
-            searchWords = props.original.evaluationAnswers[props.original.maximizingGroundTruthIndex];
+    const highlightClassName = 'highlight-predicted-focus';
+    const qa_pair = props.original;
+    const activeQuestionId = this.state.activeQuestions[qa_pair.passage_id];
+    if (activeQuestionId === qa_pair.query_id) {
+        if (qa_pair.prediction) {
+            searchWords = qa_pair.evaluationPrediction;
         }
     }
-    return <WrapDiv><Highlighter highlightClassName={highlightClassName} searchWords={searchWords} textToHighlight={props.value || ''} /></WrapDiv>
+    return <WrapDiv><Highlighter autoEscape={true} highlightClassName={highlightClassName} searchWords={searchWords} textToHighlight={props.value || ''} /></WrapDiv>
 }
 let renderAnswersCell = function(props) {
     let searchWords = [];
-    const highlightClassName = props.column.id === 'displayPrediction' ? 'highlight-predicted' : 'highlight-gold';
+    const highlightClassName = 'highlight-gold';
     const activeQuestionId = this.state.activeQuestions[props.original.passage_id];
     if (activeQuestionId === props.original.query_id) {        
         searchWords = props.original.evaluationAnswers[props.original.maximizingGroundTruthIndex];
@@ -547,7 +561,7 @@ let renderAnswersCell = function(props) {
             {props.value.map((answer, index) => {
                 return <tr key={index}>
                     <td style={{whiteSpace: 'pre-wrap', padding: 0, 'borderTop': 0}}>
-                        <WrapDiv><Highlighter highlightClassName={highlightClassName} 
+                        <WrapDiv><Highlighter autoEscape={true} highlightClassName={highlightClassName} 
                             searchWords={props.original.maximizingGroundTruthIndex === index ? searchWords : []} 
                             textToHighlight={answer} /></WrapDiv>
                     </td>

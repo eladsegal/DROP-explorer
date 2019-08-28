@@ -1,16 +1,28 @@
 .highlight-gold {
-    background-color: #ebc700;
+    background-color: rgba(235, 199, 0, 1);
 }
 /*.highlight-predicted {
-    background-color: #92affd;
+    background-color: rgba(146, 175, 253, 1);
 }*/
 .highlight-search {
-    background-color: #f492fd;
+    background-color: rgba(244, 146, 253, 1);
 }
 
+.highlight-predicted-focus-bold {
+    background-color: rgba(250, 158, 158, 1);
+    font-weight: 700;
+}
+.highlight-predicted-focus {
+    background-color: rgba(250, 158, 158, 1);
+}
 .highlight-predicted {
-    background-color: #fa9e9e;
+    background-color: rgba(250, 158, 158, 0.4);
+}
+
+.highlight-correct-focus {
+    background-color: rgba(107, 236, 65, 1);
+    font-weight: 700;
 }
 .highlight-correct {
-    background-color: #6bec41;
+    background-color: rgba(107, 236, 65, 0.4);
 }
