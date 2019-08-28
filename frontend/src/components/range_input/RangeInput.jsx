@@ -28,8 +28,7 @@ class RangeInput extends React.PureComponent {
         if (!isNaN(event.target.value)) {
             const newLow = parseFloat(event.target.value)
             this.setState({ 
-                low: newLow,
-                high: Math.max(this.state.high, newLow)
+                low: newLow
             });
         }
     }
@@ -37,7 +36,6 @@ class RangeInput extends React.PureComponent {
         if (!isNaN(event.target.value)) {
             const newHigh = parseFloat(event.target.value)
             this.setState({ 
-                low: Math.min(this.state.low, newHigh),
                 high: newHigh
             });
         }
@@ -46,7 +44,7 @@ class RangeInput extends React.PureComponent {
     render() {
         return <div>
         <InputGroup tag='span'>
-            <Input onChange={this.lowChange} value={this.state.low} type='number' step='0.01' style={{padding: '0px', textAlign: 'right'}}></Input>
+            <Input onChange={this.lowChange} value={this.state.low} type='number' step='0.01' style={{padding: '0px', textAlign: 'center'}}></Input>
             <InputGroupAddon tag='span' addonType="append">
                 <InputGroupText>≤</InputGroupText>
             </InputGroupAddon>
@@ -54,7 +52,7 @@ class RangeInput extends React.PureComponent {
             <InputGroupAddon tag='span' addonType="prepend">
                 <InputGroupText>≤</InputGroupText>
             </InputGroupAddon>
-            <Input onChange={this.highChange} value={this.state.high} type='number' step='0.01' style={{padding: '0px'}}></Input>
+            <Input onChange={this.highChange} value={this.state.high} type='number' step='0.01' style={{padding: '0px', textAlign: 'center'}}></Input>
         </InputGroup>
       </div>;
     }
