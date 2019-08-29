@@ -57,6 +57,10 @@ export function getAnswerForEvaluation(answer) {
         answerForEvaluation = [];
         ['day', 'month', 'year'].forEach(prop => {
             if (date[prop] === 0 || date[prop]) {
+                /* 
+                better than creating a single string, as it
+                allows us to search the passage per date member
+                */
                 answerForEvaluation.push(String(date[prop]))
             }
         });

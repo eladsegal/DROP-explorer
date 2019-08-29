@@ -89,12 +89,12 @@ class ExplorerTable extends React.Component {
     }
 
     shouldComponentUpdate(nextProps, nextState) {
-        if (this.props.dataset !== nextProps.dataset) {
+        if (isChanged(['dataset'], this.props, nextProps)) {
             // reset all when the dataset is switched
             this.setInternals(cloneDeep(initialInternals));
             this.setState(cloneDeep(initialState));
-        } else if (this.props.predictions !== nextProps.predictions) {
-             this.setInternals({data: undefined, filteredData: undefined});
+        } else if (isChanged(['predictions'], this.props, nextProps)) {
+             this.setInternals(cloneDeep(initialInternals));
         } else if (isChanged(filterProps, this.props, nextProps)) {
             // update only the changed filter
             const filteredAnswerTypesChanged = isChanged(['filteredAnswerTypes', 'answerTypeFilterFirstOnly'], this.props, nextProps);

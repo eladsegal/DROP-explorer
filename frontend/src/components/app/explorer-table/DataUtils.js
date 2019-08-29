@@ -126,9 +126,9 @@ function process_row(accumulator, row, index) {
     const isValid = hasQuestions;
 
     if (isValid) {
-        row.passage = row.passage.trim();
         const reduced_row = {
             ...row,
+            passage: row.passage.trim(),
             qa_pairs,
             passage_index: index
         }
@@ -184,9 +184,9 @@ function process_qa_pair(accumulator, qa_pair, query_index) {
         });
     }
     
-    qa_pair.question = qa_pair.question.trim();
     accumulator.qa_pairs.push({
         ...qa_pair,
+        question: qa_pair.question.trim(),
         evaluationAnswers,
         displayAnswers,
         answersTypes,
