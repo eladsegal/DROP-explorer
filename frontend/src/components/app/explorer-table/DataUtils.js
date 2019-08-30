@@ -228,7 +228,8 @@ export function filterDataHelper(internals, filteredAnswerTypes, answerTypeFilte
                     filteredTypes: filteredAnswerTypes,
                     fields: ['answersTypes'],
                     missingValue: noAnswerType,
-                    firstOnly: answerTypeFilterFirstOnly
+                    firstOnly: answerTypeFilterFirstOnly,
+                    AND: false
                 });
                 const result = reduced.filteredData;
 
@@ -245,7 +246,8 @@ export function filterDataHelper(internals, filteredAnswerTypes, answerTypeFilte
                 filteredData: [],
                 filteredTypes: filteredPredictionTypes,
                 fields: ['predictionType'],
-                missingValue: noPredictionType
+                missingValue: noPredictionType,
+                AND: false
             });
             const result = reduced.filteredData;
 
@@ -293,7 +295,6 @@ export function filterDataHelper(internals, filteredAnswerTypes, answerTypeFilte
         filteredData = data;
     }
 
-    // Add mean metrics for passage and overall?
     const metrics = {
         questionsCount: 0,
         predictedCount: 0,
@@ -459,7 +460,8 @@ function typeFilterReudcer_rows(accumulator, row) {
         filteredTypes,
         fields: accumulator.fields,
         missingValue: accumulator.missingValue,
-        firstOnly: accumulator.firstOnly
+        firstOnly: accumulator.firstOnly,
+        AND: accumulator.AND
     });
 
     const hasQuestions = filtered_qa_pairs.length > 0;
@@ -477,7 +479,9 @@ function typeFilterReudcer_qa_pairs(accumulator, qa_pair) {
     const filteredTypes = accumulator.filteredTypes;
     const fields = accumulator.fields;
     const firstOnly = accumulator.firstOnly;
+    const AND = accumulator.AND;
 
+    const foundTypes = new Set();
     let typeValid = false;
     for (let i = 0; i < fields.length; i++) {
         const field = fields[i];
@@ -487,13 +491,21 @@ function typeFilterReudcer_qa_pairs(accumulator, qa_pair) {
             const arr = obj;
             for (let j = 0; j < arr.length; j++) {
                 const value = arr[j];
-                typeValid = filteredTypes.includes(value.key);
-                if (typeValid) {
-                    break;
+                if (!AND) {
+                    typeValid = filteredTypes.includes(value.key);
+                    if (typeValid) {
+                        break;
+                    }
+                } else {
+                    foundTypes.add(value.key)
                 }
+
                 if (firstOnly) {
                     break;
                 }
+            }
+            if (AND && foundTypes.size === filteredTypes.length && filteredTypes.every(x => foundTypes.has(x))) {
+                typeValid = true;
             }
             if (typeValid) {
                 break;
