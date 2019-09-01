@@ -59,13 +59,36 @@ export function processDataHelper(dataset, predictions) {
 
                         qa_pair.prediction = Array.isArray(predictionValue) ? predictionValue : [predictionValue];
                         qa_pair.displayPrediction = getAnswerStringForDisplayAndType({'spans': qa_pair.prediction}).displayAnswer;
-                        qa_pair.evaluationPrediction = getAnswerForEvaluation({'spans': qa_pair.prediction});
                         qa_pair.predictionType = predictionType;
                         qa_pair.maximizingGroundTruth = prediction.maximizing_ground_truth.sort();
                         qa_pair.f1 = prediction.f1;
                         qa_pair.em = prediction.em;
                         qa_pair.loss = prediction.loss;
                         qa_pair.max_passage_length = prediction.max_passage_length;
+
+                        if (predictionType.key !== 'arithmetic') {
+                            qa_pair.evaluationPrediction = getAnswerForEvaluation({'spans': qa_pair.prediction});
+                        } else {
+                            const numbers = []
+                            const signs = []                           
+                            prediction.answer.numbers.filter(number => number.sign !== 0).forEach(number => {
+                                numbers.push(number.value)
+                                signs.push(number.sign === -1 ? '-' : '+')
+                            })
+
+                            if (numbers.length <= 1) {
+                                qa_pair.evaluationPrediction = getAnswerForEvaluation({'spans': qa_pair.prediction});
+                            } else {
+                                qa_pair.displayPrediction = `${
+                                    numbers.map((number, index) => {
+                                        const sign = signs[index]
+                                        return `${index === 0 && sign === '+' ? '' : sign}${index === 0 ? '' : ' '}${number.toString()}`;
+                                    }).join(' ')
+                                } = ${qa_pair.displayPrediction}`
+
+                                qa_pair.evaluationPrediction = getAnswerForEvaluation({'spans': numbers.map(x => x.toString())});
+                            }
+                        }
 
                         const maximizingGroundTruth = qa_pair.maximizingGroundTruth;
                         const maximizingGroundTruthIndex = qa_pair.evaluationAnswers.findIndex(evaluationAnswer => {

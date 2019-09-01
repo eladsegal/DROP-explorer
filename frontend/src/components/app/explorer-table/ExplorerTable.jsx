@@ -514,6 +514,12 @@ let renderPassageOrQuestionCell = function(props) {
             highlightClassNamePerCategory = {'gold_1': 'highlight-gold'}
 
             if (qa_pair.prediction) {
+                if (qa_pair.predictionType.key === 'arithmetic') {
+                    searchWords = [];
+                    categoryPerSearchWordIndex = [];
+                    highlightClassNamePerCategory = {};
+                }
+
                 const context = props.column.id === 'passage' ? 'p' : 'q'
 
                 highlightClassNamePerCategory['clipped_0'] = 'clipped-passage'
@@ -523,7 +529,7 @@ let renderPassageOrQuestionCell = function(props) {
                     categoryPerSpanIndex.push('clipped_0');
                 }
                 
-                if (!['arithmetic', 'counting'].includes(qa_pair.predictionType.key)) {
+                if (!['counting'].includes(qa_pair.predictionType.key)) {
                     const predictionSpans = qa_pair.predictionSpans;
                     if (predictionSpans) {
                         predictionSpans.reduce((spansAcc, span) => {
