@@ -8,15 +8,15 @@
     background-color: rgba(244, 146, 253, 1);
 }
 
-.highlight-predicted-focus-bold {
+.highlight-predicted-focus {
     background-color: rgba(250, 158, 158, 1);
     font-weight: 700;
 }
-.highlight-predicted-focus {
-    background-color: rgba(250, 158, 158, 1);
-}
 .highlight-predicted {
     background-color: rgba(250, 158, 158, 0.4);
+}
+.highlight-predicted-regular {
+    background-color: rgba(250, 158, 158, 1);
 }
 
 .highlight-correct-focus {
@@ -25,4 +25,25 @@
 }
 .highlight-correct {
     background-color: rgba(107, 236, 65, 0.4);
+}
+.highlight-focus {
+    font-weight: 700;
+}
+.clipped-passage {
+    background-color: transparent;
+    opacity: 0.4;
+}
+.highlight-predicted-focus-clipped {
+    background-color: rgba(250, 158, 158, 1);
+    font-weight: 700;
+    opacity: 0.4;
+}
+.highlight-correct-focus-clipped {
+    background-color: rgba(107, 236, 65, 1);
+    font-weight: 700;
+    opacity: 0.4;
+}
+.highlight-correct-clipped {
+    background-color: rgba(107, 236, 65, 0.4);
+    opacity: 0.4;
 }

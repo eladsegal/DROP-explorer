@@ -494,7 +494,7 @@ let renderPassageOrQuestionCell = function(props) {
     let searchWords = [];
     let categoryPerSearchWordIndex = undefined;
     let spans = [];
-    let categoryPerSpanIndex = undefined;
+    let categoryPerSpanIndex = [];
     let highlightClassNamePerCategory = undefined;
     const activeQuestionId = this.state.activeQuestions[props.original.passage_id];
     if (activeQuestionId) {
@@ -510,34 +510,44 @@ let renderPassageOrQuestionCell = function(props) {
         if (qa_pair) {
             searchWords = [...qa_pair.evaluationAnswers[qa_pair.maximizingGroundTruthIndex]];
 
-            categoryPerSearchWordIndex = searchWords.map(() => 'gold_0')
-            highlightClassNamePerCategory = {'gold_0': 'highlight-gold'}
+            categoryPerSearchWordIndex = searchWords.map(() => 'gold_1')
+            highlightClassNamePerCategory = {'gold_1': 'highlight-gold'}
 
             if (qa_pair.prediction) {
+                const context = props.column.id === 'passage' ? 'p' : 'q'
+
+                highlightClassNamePerCategory['clipped_0'] = 'clipped-passage'
+                const max_passage_length = qa_pair.max_passage_length;
+                if (max_passage_length !== undefined && context === 'p') {
+                    spans.push([max_passage_length, props.original.passage.length]);
+                    categoryPerSpanIndex.push('clipped_0');
+                }
+                
                 if (!['arithmetic', 'counting'].includes(qa_pair.predictionType.key)) {
                     const predictionSpans = qa_pair.predictionSpans;
                     if (predictionSpans) {
-                        const context = props.column.id === 'passage' ? 'p' : 'q'
-
-                        spans = predictionSpans.reduce((spansAcc, span) => {
+                        predictionSpans.reduce((spansAcc, span) => {
                             if (span[0] === context) {
                                 spansAcc.push([span[1], span[2]]);
                             }
                             return spansAcc;
-                        }, [])
-                        categoryPerSpanIndex = spans.map(x => 'focus_2')
+                        }, spans)
+                        spans.forEach(() => categoryPerSpanIndex.push('focus_3'))
                     }
 
                     const evaluationPrediction = qa_pair.evaluationPrediction;
                     if (evaluationPrediction) {
                         searchWords.push(...evaluationPrediction);
-                        categoryPerSearchWordIndex.push(...(evaluationPrediction.map(x => 'prediction_1')));
+                        categoryPerSearchWordIndex.push(...(evaluationPrediction.map(x => 'prediction_2')));
                     }
 
-                    highlightClassNamePerCategory['prediction_1'] = 'highlight-predicted';
-                    highlightClassNamePerCategory['prediction_1-focus_2'] = 'highlight-predicted-focus-bold';
-                    highlightClassNamePerCategory['gold_0-prediction_1'] = 'highlight-correct'
-                    highlightClassNamePerCategory['gold_0-prediction_1-focus_2'] = 'highlight-correct-focus'
+                    highlightClassNamePerCategory['prediction_2'] = 'highlight-predicted';
+                    highlightClassNamePerCategory['prediction_2-focus_3'] = 'highlight-predicted-focus';
+                    highlightClassNamePerCategory['clipped_0-prediction_2-focus_3'] = 'highlight-predicted-focus-clipped';
+                    highlightClassNamePerCategory['gold_1-prediction_2'] = 'highlight-correct';
+                    highlightClassNamePerCategory['clipped_0-gold_1-prediction_2'] = 'highlight-correct-clipped';
+                    highlightClassNamePerCategory['gold_1-prediction_2-focus_3'] = 'highlight-correct-focus';
+                    highlightClassNamePerCategory['clipped_0-gold_1-prediction_2-focus_3'] = 'highlight-correct-focus-clipped';
                 } else {
                     searchWords = [];
                 }
@@ -548,11 +558,11 @@ let renderPassageOrQuestionCell = function(props) {
             searchWords={searchWords} categoryPerSearchWordIndex={categoryPerSearchWordIndex}
             spans={spans} categoryPerSpanIndex={categoryPerSpanIndex}
             highlightClassNamePerCategory={highlightClassNamePerCategory}
-            textToHighlight={props.value} /></WrapDiv>
+            textToHighlight={props.value} paddingMultiplier={0} /></WrapDiv>
 }
 let renderPredictionCell = function(props) {
     let searchWords = [];
-    const highlightClassName = 'highlight-predicted-focus';
+    const highlightClassName = 'highlight-predicted-regular';
     const qa_pair = props.original;
     const activeQuestionId = this.state.activeQuestions[qa_pair.passage_id];
     if (activeQuestionId === qa_pair.query_id) {
