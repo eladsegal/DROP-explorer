@@ -71,14 +71,14 @@ export function isChanged(changeSignals, obj, otherObj, debug, sourceName) {
             }
         }
     }
-    if (debug) {
-        let changed = changes.length > 0;
 
+    let changed = changes.length > 0;
+    if (debug) {
         if (changed) {
             console.log(`${sourceName} Caused update: ${changes.join(', ')}`);
         }
-        return changed;
     }
+    return changed;
 }
 
 export function shouldUpdate(props_updateSignals, state_updateSignals, props, state, nextProps, nextState, debug, componentName) {

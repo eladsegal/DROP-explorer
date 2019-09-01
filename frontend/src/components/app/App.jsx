@@ -10,7 +10,8 @@ import ExplorerSettings from './explorer-settings/ExplorerSettings';
 import ExplorerTable from './explorer-table/ExplorerTable';
 
 const props_updateSignals = []
-const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'answerTypeFilterFirstOnly',
+const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'answerTypeFilterFirstOnly', 
+                            'answerTypeFilterStrict', 'clippedFilter', 'unclippedFilter',
                             'predictionTypes', 'filteredPredictionTypes', 'searchProps', 
                             'F1Range', 'EMRange',
                             'navbarSticky', 'isOpen']
@@ -29,6 +30,9 @@ class App extends React.Component {
             allowSourceSelection: true,
             filteredAnswerTypes: ['multi_span', 'single_span', 'number', 'date'],
             answerTypeFilterFirstOnly: true,
+            answerTypeFilterStrict: false,
+            clippedFilter: true,
+            unclippedFilter: true,
             predictionTypes: [],
             filteredPredictionTypes: [],
             instantSearch: true,
@@ -55,7 +59,7 @@ class App extends React.Component {
         const update = shouldUpdate(props_updateSignals, state_updateSignals, 
             this.props, this.state, 
             nextProps, nextState, 
-            true, this.constructor.name);
+            false, this.constructor.name);
         return update;
     }
 
@@ -63,6 +67,9 @@ class App extends React.Component {
         this.setState({
             filteredAnswerTypes: settings.filteredAnswerTypes,
             answerTypeFilterFirstOnly: settings.answerTypeFilterFirstOnly,
+            answerTypeFilterStrict: settings.answerTypeFilterStrict,
+            clippedFilter: settings.clippedFilter,
+            unclippedFilter: settings.unclippedFilter,
             filteredPredictionTypes: settings.filteredPredictionTypes,
             searchProps: settings.searchProps,
             dataset: settings.dataset,
@@ -119,6 +126,9 @@ class App extends React.Component {
                                 collapseAllFunc={this.state.collapseAllFunc}
                                 filteredAnswerTypes={this.state.filteredAnswerTypes}
                                 answerTypeFilterFirstOnly={this.state.answerTypeFilterFirstOnly}
+                                answerTypeFilterStrict={this.state.answerTypeFilterStrict}
+                                clippedFilter={this.state.clippedFilter}
+                                unclippedFilter={this.state.unclippedFilter}
                                 filteredPredictionTypes={this.state.filteredPredictionTypes}
                                 predictionTypes={this.state.predictionTypes}
                                 instantSearch={this.state.instantSearch}
@@ -133,6 +143,9 @@ class App extends React.Component {
                         predictions={this.state.predictions}
                         filteredAnswerTypes={this.state.filteredAnswerTypes}
                         answerTypeFilterFirstOnly={this.state.answerTypeFilterFirstOnly}
+                        answerTypeFilterStrict={this.state.answerTypeFilterStrict}
+                        clippedFilter={this.state.clippedFilter}
+                        unclippedFilter={this.state.unclippedFilter}
                         filteredPredictionTypes={this.state.filteredPredictionTypes}
                         searchProps={this.state.searchProps}
                         F1Range={this.state.F1Range}

@@ -23,7 +23,8 @@ const initialInternals = {
         predictionTypes: undefined,
         search: undefined,
         F1Range: undefined,
-        EMRange: undefined
+        EMRange: undefined,
+        clipped: undefined
     },
     predictionTypes: [],
 
@@ -42,7 +43,9 @@ const initialState = {
     questionSorted: []
 };
 
-const filterProps = ['filteredAnswerTypes', 'answerTypeFilterFirstOnly', 'filteredPredictionTypes', 'searchProps', 'F1Range', 'EMRange']
+const filterProps = ['filteredAnswerTypes', 'answerTypeFilterFirstOnly', 'answerTypeFilterStrict',
+                    'clippedFilter', 'unclippedFilter',
+                    'filteredPredictionTypes', 'searchProps', 'F1Range', 'EMRange']
 const props_updateSignals = ['dataset', 'predictions', ...filterProps]
 const state_updateSignals = ['page', 'passagesPageSize', 'questionsPageSize', 'expanded_passage_ids', 'activeQuestions', 'questionResized', 'questionSorted']
 class ExplorerTable extends React.Component {
@@ -97,14 +100,15 @@ class ExplorerTable extends React.Component {
              this.setInternals(cloneDeep(initialInternals));
         } else if (isChanged(filterProps, this.props, nextProps)) {
             // update only the changed filter
-            const filteredAnswerTypesChanged = isChanged(['filteredAnswerTypes', 'answerTypeFilterFirstOnly'], this.props, nextProps);
+            const filteredAnswerTypesChanged = isChanged(['filteredAnswerTypes', 'answerTypeFilterFirstOnly', 'answerTypeFilterStrict'], this.props, nextProps);
             const filteredPredictionTypesChanged = isChanged(['filteredPredictionTypes'], this.props, nextProps);
             const searchPropsChanged = isChanged(['searchProps'], this.props, nextProps);
             const F1RangeChanged = isChanged(['F1Range'], this.props, nextProps);
             const EMRangeChanged = isChanged(['EMRange'], this.props, nextProps);
+            const clippedFilterChanged = isChanged(['clippedFilter', 'unclippedFilter'], this.props, nextProps);
 
             const refilteringRequired = filteredAnswerTypesChanged || filteredPredictionTypesChanged || 
-                                    searchPropsChanged || F1RangeChanged || EMRangeChanged;
+                                    searchPropsChanged || F1RangeChanged || EMRangeChanged || clippedFilterChanged;
 
             this.setInternals({
                 filteredData: refilteringRequired ? undefined : this.internals.filteredData
@@ -119,17 +123,20 @@ class ExplorerTable extends React.Component {
                 this.internals.filteredDataPerFilter.search = undefined;
             }
             if (F1RangeChanged) {
-                this.internals.filteredDataPerFilter.F1Range = undefined
+                this.internals.filteredDataPerFilter.F1Range = undefined;
             }
             if (EMRangeChanged) {
-                this.internals.filteredDataPerFilter.EMRange = undefined
+                this.internals.filteredDataPerFilter.EMRange = undefined;
+            }
+            if (clippedFilterChanged) {
+                this.internals.filteredDataPerFilter.clipped = undefined;
             }
         }
         
         const update = shouldUpdate(props_updateSignals, state_updateSignals, 
             this.props, this.state, 
             nextProps, nextState, 
-            true, this.constructor.name);
+            false, this.constructor.name);
         return update;
     }
 
@@ -273,16 +280,19 @@ class ExplorerTable extends React.Component {
     filterData() {
         const filteredAnswerTypes = this.props.filteredAnswerTypes;
         const answerTypeFilterFirstOnly = this.props.answerTypeFilterFirstOnly;
+        const answerTypeFilterStrict = this.props.answerTypeFilterStrict;
         const filteredPredictionTypes = this.props.filteredPredictionTypes;
         const searchProps = this.props.searchProps;
         const F1Range = this.props.F1Range;
         const EMRange = this.props.EMRange;
+        const clippedFilter = {'showClipped': this.props.clippedFilter, 'showUnclipped': this.props.unclippedFilter};
 
         const {
             filteredData,
             filteredDataPerFilter,
             metrics
-        } = filterDataHelper(this.internals, filteredAnswerTypes, answerTypeFilterFirstOnly, filteredPredictionTypes, searchProps, F1Range, EMRange);
+        } = filterDataHelper(this.internals, filteredAnswerTypes, answerTypeFilterFirstOnly, answerTypeFilterStrict, 
+                            filteredPredictionTypes, searchProps, F1Range, EMRange, clippedFilter);
         
         this.setInternals({
             filteredData,
@@ -297,17 +307,13 @@ class ExplorerTable extends React.Component {
 
     render() {
 
-        console.time('processData');
         if (!this.internals.data) {
             this.processData();
         }
-        console.timeEnd('processData');
         
-        console.time('filterData');
         if (!this.internals.filteredData) {
             this.filterData();
         }        
-        console.timeEnd('filterData');
 
         const passage_columns = [
             {

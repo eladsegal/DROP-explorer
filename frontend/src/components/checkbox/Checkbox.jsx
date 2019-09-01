@@ -23,7 +23,7 @@ class Checkbox extends React.PureComponent {
     }
 
     render() {
-        return <FormGroup check style={{display: 'inline', ...this.props.style}}>
+        return <FormGroup check style={{...(this.props.inline ? {display: 'inline'} : {}), ...this.props.style}}>
             <Label check>
                 <Input type="checkbox" 
                 style={(this.props.style && 

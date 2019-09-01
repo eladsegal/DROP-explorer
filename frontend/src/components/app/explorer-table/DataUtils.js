@@ -224,7 +224,8 @@ function process_qa_pair(accumulator, qa_pair, query_index) {
 }
 
 
-export function filterDataHelper(internals, filteredAnswerTypes, answerTypeFilterFirstOnly, filteredPredictionTypes, searchProps, F1Range, EMRange) {
+export function filterDataHelper(internals, filteredAnswerTypes, answerTypeFilterFirstOnly, answerTypeFilterStrict, 
+                                filteredPredictionTypes, searchProps, F1Range, EMRange, clippedFilter) {
     const data = internals.data; 
     const filteredDataPerFilter = internals.filteredDataPerFilter;       
 
@@ -246,14 +247,14 @@ export function filterDataHelper(internals, filteredAnswerTypes, answerTypeFilte
 
     if (!filteredDataPerFilter.answerTypes) {
         if (filteredAnswerTypes.length > 0) {
-            if (filteredAnswerTypes.length < answerTypesConst.length) {
+            if (filteredAnswerTypes.length < answerTypesConst.length || answerTypeFilterStrict) {
                 const reduced = data.reduce(typeFilterReudcer_rows, {
                     filteredData: [],
                     filteredTypes: filteredAnswerTypes,
                     fields: ['answersTypes'],
                     missingValue: noAnswerType,
                     firstOnly: answerTypeFilterFirstOnly,
-                    AND: false
+                    strict: answerTypeFilterStrict
                 });
                 const result = reduced.filteredData;
 
@@ -271,7 +272,7 @@ export function filterDataHelper(internals, filteredAnswerTypes, answerTypeFilte
                 filteredTypes: filteredPredictionTypes,
                 fields: ['predictionType'],
                 missingValue: noPredictionType,
-                AND: false
+                strict: false
             });
             const result = reduced.filteredData;
 
@@ -310,6 +311,27 @@ export function filterDataHelper(internals, filteredAnswerTypes, answerTypeFilte
             filteredDataPerFilter.EMRange = result;
         } else {
             filteredDataPerFilter.EMRange = [];
+        }
+    }
+
+    if (internals.hasValidPredictions && !filteredDataPerFilter.clipped) {
+        const showClipped = clippedFilter.showClipped;
+        const showUnclipped = clippedFilter.showUnclipped;
+        if (showClipped || showUnclipped) {
+            if (showClipped && showUnclipped) {
+                filteredDataPerFilter.clipped = data;
+            } else {
+                const reduced = data.reduce(clippedFilterReudcer_rows, {
+                    filteredData: [],
+                    showClipped,
+                    showUnclipped,
+                });
+                const result = reduced.filteredData;
+    
+                filteredDataPerFilter.clipped = result;
+            }
+        } else {
+            filteredDataPerFilter.clipped = []
         }
     }
 
@@ -485,7 +507,7 @@ function typeFilterReudcer_rows(accumulator, row) {
         fields: accumulator.fields,
         missingValue: accumulator.missingValue,
         firstOnly: accumulator.firstOnly,
-        AND: accumulator.AND
+        strict: accumulator.strict
     });
 
     const hasQuestions = filtered_qa_pairs.length > 0;
@@ -503,7 +525,7 @@ function typeFilterReudcer_qa_pairs(accumulator, qa_pair) {
     const filteredTypes = accumulator.filteredTypes;
     const fields = accumulator.fields;
     const firstOnly = accumulator.firstOnly;
-    const AND = accumulator.AND;
+    const strict = accumulator.strict;
 
     const foundTypes = new Set();
     let typeValid = false;
@@ -515,7 +537,7 @@ function typeFilterReudcer_qa_pairs(accumulator, qa_pair) {
             const arr = obj;
             for (let j = 0; j < arr.length; j++) {
                 const value = arr[j];
-                if (!AND) {
+                if (!strict) {
                     typeValid = filteredTypes.includes(value.key);
                     if (typeValid) {
                         break;
@@ -528,7 +550,7 @@ function typeFilterReudcer_qa_pairs(accumulator, qa_pair) {
                     break;
                 }
             }
-            if (AND && foundTypes.size === filteredTypes.length && filteredTypes.every(x => foundTypes.has(x))) {
+            if (strict && foundTypes.size === filteredTypes.length && filteredTypes.every(x => foundTypes.has(x))) {
                 typeValid = true;
             }
             if (typeValid) {
@@ -588,6 +610,50 @@ function rangeFilterReudcer_qa_pairs(accumulator, qa_pair) {
     }    
 
     const isValid = rangeValid;
+
+    if (isValid) {
+        accumulator.filtered_qa_pairs.push({
+            ...qa_pair
+        });
+    }
+
+    return accumulator;
+}
+
+// Clipped Filtering
+function clippedFilterReudcer_rows(accumulator, row) {
+    const showClipped = accumulator.showClipped;
+    const showUnclipped = accumulator.showUnclipped;
+
+    const { filtered_qa_pairs } = row.qa_pairs.reduce(clippedFilterReudcer_qa_pairs, {
+        filtered_qa_pairs: [],
+        showClipped,
+        showUnclipped,
+    });
+
+    const hasQuestions = filtered_qa_pairs.length > 0;
+    const isValid = hasQuestions;
+
+    if (isValid) {
+        accumulator.filteredData.push({
+            ...row,
+            qa_pairs: filtered_qa_pairs,
+        });
+    }
+    return accumulator;
+}
+
+function clippedFilterReudcer_qa_pairs(accumulator, qa_pair) {
+    const showClipped = accumulator.showClipped;
+    const showUnclipped = accumulator.showUnclipped;
+
+    let isValid = false;
+    if (showClipped) {
+        isValid |= qa_pair.max_passage_length !== undefined;
+    }
+    if (showUnclipped) {
+        isValid |= qa_pair.max_passage_length === undefined;
+    }
 
     if (isValid) {
         accumulator.filtered_qa_pairs.push({

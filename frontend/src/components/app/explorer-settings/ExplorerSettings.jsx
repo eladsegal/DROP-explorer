@@ -19,7 +19,9 @@ import RangeInput from '../../range_input/RangeInput';
 import Checkbox from '../../checkbox/Checkbox';
 
 const props_updateSignals = ['predictionTypes']
-const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'answerTypeFilterFirstOnly', 'filteredPredictionTypes', 'searchProps', 'F1Range', 'EMRange']
+const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'answerTypeFilterFirstOnly', 
+                            'answerTypeFilterStrict', 'clippedFilter', 'unclippedFilter',
+                            'filteredPredictionTypes', 'searchProps', 'F1Range', 'EMRange']
 class ExplorerSettings extends React.Component {
     constructor(props) {
         super(props);
@@ -27,12 +29,18 @@ class ExplorerSettings extends React.Component {
         this.predictionsChange = this.predictionsChange.bind(this);
         this.filteredAnswerTypesChange = this.filteredAnswerTypesChange.bind(this);
         this.answerTypeFilterFirstOnlyChange = this.answerTypeFilterFirstOnlyChange.bind(this);
+        this.answerTypeFilterStrictChange = this.answerTypeFilterStrictChange.bind(this);
+        this.clippedFilterChange = this.clippedFilterChange.bind(this);
+        this.unclippedFilterChange = this.unclippedFilterChange.bind(this);
         this.filteredPredictionTypesChange = this.filteredPredictionTypesChange.bind(this);
         this.searchFilterChange = this.searchFilterChange.bind(this);
         this.rangeFilterChange = this.rangeFilterChange.bind(this);
         this.state = {
             filteredAnswerTypes: this.props.filteredAnswerTypes,
             answerTypeFilterFirstOnly: this.props.answerTypeFilterFirstOnly,
+            answerTypeFilterStrict: this.props.answerTypeFilterStrict,
+            clippedFilter: this.props.clippedFilter,
+            unclippedFilter: this.props.unclippedFilter,
             filteredPredictionTypes: this.props.filteredPredictionTypes,
             searchProps: this.props.searchProps,
             F1Range: this.props.F1Range,
@@ -44,7 +52,7 @@ class ExplorerSettings extends React.Component {
         const update = shouldUpdate(props_updateSignals, state_updateSignals, 
             this.props, this.state, 
             nextProps, nextState, 
-            true, this.constructor.name);
+            false, this.constructor.name);
         return update;
     }
 
@@ -69,6 +77,18 @@ class ExplorerSettings extends React.Component {
     
     answerTypeFilterFirstOnlyChange(answerTypeFilterFirstOnly) {
         this.setState({ answerTypeFilterFirstOnly });
+    }
+
+    answerTypeFilterStrictChange(answerTypeFilterStrict) {
+        this.setState({ answerTypeFilterStrict });
+    }
+
+    clippedFilterChange(clippedFilter) {
+        this.setState({ clippedFilter });
+    }
+
+    unclippedFilterChange(unclippedFilter) {
+        this.setState({ unclippedFilter });
     }
 
     filteredPredictionTypesChange(filteredPredictionTypes) {
@@ -126,14 +146,26 @@ class ExplorerSettings extends React.Component {
                     </CardBody>
                 </Card>
                 <Card className='col-sm-2 p-0'>
-                    <CardHeader style={{display: 'flex', justifyContent: 'space-between'}}>
-                        <span style={{paddingRight: '3px'}}>Answer Type Filter</span>
-                        <Checkbox text={'Primary Only'} style={{fontSize: 'smaller'}}
-                                checked={this.state.answerTypeFilterFirstOnly}
-                                onChange={this.answerTypeFilterFirstOnlyChange}></Checkbox>
+                    <CardHeader>
+                        Answer Type Filter
                     </CardHeader>
                     <CardBody>
-                        <CheckboxList onChange={this.filteredAnswerTypesChange} checked={this.state.filteredAnswerTypes} options={answerTypesConst}></CheckboxList>
+                        <ListGroup className='list-group-horizontal'>
+                            <ListGroupItem style={{width: '100%'}}>
+                                <CheckboxList 
+                                    onChange={this.filteredAnswerTypesChange} 
+                                    checked={this.state.filteredAnswerTypes} 
+                                    options={answerTypesConst}></CheckboxList>
+                            </ListGroupItem>
+                            <ListGroupItem style={{width: '100%'}}>
+                                <Checkbox text={'Primary Only'} inline={false}
+                                    checked={this.state.answerTypeFilterFirstOnly}
+                                    onChange={this.answerTypeFilterFirstOnlyChange}></Checkbox>
+                                <Checkbox text={'Strict'} inline={false}
+                                    checked={this.state.answerTypeFilterStrict}
+                                    onChange={this.answerTypeFilterStrictChange}></Checkbox>
+                            </ListGroupItem>
+                        </ListGroup>
                     </CardBody>
                 </Card>
                 <Card className='col-sm-6 p-0'>
@@ -168,6 +200,17 @@ class ExplorerSettings extends React.Component {
                         <RangeInput metric='EM' initial={this.props.EMRange} step='0.01' onChange={this.rangeFilterChange}></RangeInput>
                     </ListGroupItem>
                     </ListGroup>
+                    </CardBody>
+                </Card> : null}
+                {this.state.predictions ? <Card className='col-sm-2 p-0'>
+                    <CardHeader>Clipped Filter</CardHeader>
+                    <CardBody>
+                        <Checkbox text={'Show Clipped'} inline={false}
+                            checked={this.state.clippedFilter}
+                            onChange={this.clippedFilterChange}></Checkbox>
+                        <Checkbox text={'Show Unclipped'} inline={false}
+                            checked={this.state.unclippedFilter}
+                            onChange={this.unclippedFilterChange}></Checkbox>
                     </CardBody>
                 </Card> : null}
             </CardGroup>
