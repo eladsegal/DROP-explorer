@@ -82,11 +82,11 @@ export function processDataHelper(dataset, predictions) {
                                 qa_pair.displayPrediction = `${
                                     numbers.map((number, index) => {
                                         const sign = signs[index]
-                                        return `${index === 0 && sign === '+' ? '' : sign}${index === 0 ? '' : ' '}${number.toString()}`;
+                                        return `${index === 0 && sign === '+' ? '' : sign}${index === 0 ? '' : ' '}${number.toLocaleString()}`;
                                     }).join(' ')
-                                } = ${qa_pair.displayPrediction}`
+                                } = ${Number(qa_pair.displayPrediction).toLocaleString()}`
 
-                                qa_pair.evaluationPrediction = getAnswerForEvaluation({'spans': numbers.map(x => x.toString())});
+                                qa_pair.evaluationPrediction = getAnswerForEvaluation({'spans': numbers.map(x => x.toLocaleString())});
                             }
                         }
 
