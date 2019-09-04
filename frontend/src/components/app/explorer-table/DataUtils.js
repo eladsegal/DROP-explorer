@@ -64,7 +64,7 @@ export function processDataHelper(dataset, predictions) {
                         qa_pair.f1 = prediction.f1;
                         qa_pair.em = prediction.em;
                         qa_pair.loss = prediction.loss;
-                        qa_pair.max_passage_length = prediction.max_passage_length;
+                        qa_pair.max_passage_length = prediction.max_passage_length === -1 ? undefined : prediction.max_passage_length;
 
                         if (predictionType.key !== 'arithmetic') {
                             qa_pair.evaluationPrediction = getAnswerForEvaluation({'spans': qa_pair.prediction});
