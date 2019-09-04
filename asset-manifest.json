@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/DROP-explorer/static/css/main.0776cd4e.chunk.css",
-    "main.js": "/DROP-explorer/static/js/main.c79a5245.chunk.js",
-    "main.js.map": "/DROP-explorer/static/js/main.c79a5245.chunk.js.map",
+    "main.js": "/DROP-explorer/static/js/main.801ffd28.chunk.js",
+    "main.js.map": "/DROP-explorer/static/js/main.801ffd28.chunk.js.map",
     "runtime~main.js": "/DROP-explorer/static/js/runtime~main.063dbb95.js",
     "runtime~main.js.map": "/DROP-explorer/static/js/runtime~main.063dbb95.js.map",
     "static/css/2.d4b275d9.chunk.css": "/DROP-explorer/static/css/2.d4b275d9.chunk.css",
     "static/js/2.0224f9c6.chunk.js": "/DROP-explorer/static/js/2.0224f9c6.chunk.js",
     "static/js/2.0224f9c6.chunk.js.map": "/DROP-explorer/static/js/2.0224f9c6.chunk.js.map",
     "index.html": "/DROP-explorer/index.html",
-    "precache-manifest.17f85bdd786b2578116108701d297645.js": "/DROP-explorer/precache-manifest.17f85bdd786b2578116108701d297645.js",
+    "precache-manifest.b4087d6fdc4d4da749ad76f92f694a2c.js": "/DROP-explorer/precache-manifest.b4087d6fdc4d4da749ad76f92f694a2c.js",
     "service-worker.js": "/DROP-explorer/service-worker.js",
     "static/css/2.d4b275d9.chunk.css.map": "/DROP-explorer/static/css/2.d4b275d9.chunk.css.map",
     "static/css/main.0776cd4e.chunk.css.map": "/DROP-explorer/static/css/main.0776cd4e.chunk.css.map"
