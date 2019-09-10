@@ -439,7 +439,7 @@ class ExplorerTable extends React.Component {
                 </div> : null}
                 {(this.props.predictions && this.internals.hasValidPredictions) ? <div className='col-3'>
                     <h4>
-                        F1: {forceDecimalPlaces(this.internals.metrics.f1, 3)}, EM: {forceDecimalPlaces(this.internals.metrics.em, 3)}
+                        F1: {forceDecimalPlaces(this.internals.metrics.f1, 5)}, EM: {forceDecimalPlaces(this.internals.metrics.em, 5)}
                     </h4>
                 </div> : null}
             </div>
