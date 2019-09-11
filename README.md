@@ -2,6 +2,8 @@
 
 This is a data explorer for the dataset of [DROP: A Reading Comprehension Benchmark Requiring Discrete Reasoning Over Paragraphs](https://allennlp.org/drop).
 
+Available at http://eladsegal.github.io/DROP-explorer.
+
 ## Things to know
 
 - Multi-span answers are sorted
