@@ -24,7 +24,7 @@ const initialInternals = {
         search: undefined,
         F1Range: undefined,
         EMRange: undefined,
-        clipped: undefined
+        truncated: undefined
     },
     predictionTypes: [],
 
@@ -44,7 +44,7 @@ const initialState = {
 };
 
 const filterProps = ['filteredAnswerTypes', 'answerTypeFilterFirstOnly', 'answerTypeFilterStrict',
-                    'clippedFilter', 'unclippedFilter',
+                    'truncatedFilter', 'untruncatedFilter',
                     'filteredPredictionTypes', 'searchProps', 'F1Range', 'EMRange']
 const props_updateSignals = ['dataset', 'predictions', ...filterProps]
 const state_updateSignals = ['page', 'passagesPageSize', 'questionsPageSize', 'expanded_passage_ids', 'activeQuestions', 'questionResized', 'questionSorted']
@@ -105,10 +105,10 @@ class ExplorerTable extends React.Component {
             const searchPropsChanged = isChanged(['searchProps'], this.props, nextProps);
             const F1RangeChanged = isChanged(['F1Range'], this.props, nextProps);
             const EMRangeChanged = isChanged(['EMRange'], this.props, nextProps);
-            const clippedFilterChanged = isChanged(['clippedFilter', 'unclippedFilter'], this.props, nextProps);
+            const truncatedFilterChanged = isChanged(['truncatedFilter', 'untruncatedFilter'], this.props, nextProps);
 
             const refilteringRequired = filteredAnswerTypesChanged || filteredPredictionTypesChanged || 
-                                    searchPropsChanged || F1RangeChanged || EMRangeChanged || clippedFilterChanged;
+                                    searchPropsChanged || F1RangeChanged || EMRangeChanged || truncatedFilterChanged;
 
             this.setInternals({
                 filteredData: refilteringRequired ? undefined : this.internals.filteredData
@@ -128,8 +128,8 @@ class ExplorerTable extends React.Component {
             if (EMRangeChanged) {
                 this.internals.filteredDataPerFilter.EMRange = undefined;
             }
-            if (clippedFilterChanged) {
-                this.internals.filteredDataPerFilter.clipped = undefined;
+            if (truncatedFilterChanged) {
+                this.internals.filteredDataPerFilter.truncated = undefined;
             }
         }
         
@@ -285,14 +285,14 @@ class ExplorerTable extends React.Component {
         const searchProps = this.props.searchProps;
         const F1Range = this.props.F1Range;
         const EMRange = this.props.EMRange;
-        const clippedFilter = {'showClipped': this.props.clippedFilter, 'showUnclipped': this.props.unclippedFilter};
+        const truncatedFilter = {'showTruncated': this.props.truncatedFilter, 'showUntruncated': this.props.untruncatedFilter};
 
         const {
             filteredData,
             filteredDataPerFilter,
             metrics
         } = filterDataHelper(this.internals, filteredAnswerTypes, answerTypeFilterFirstOnly, answerTypeFilterStrict, 
-                            filteredPredictionTypes, searchProps, F1Range, EMRange, clippedFilter);
+                            filteredPredictionTypes, searchProps, F1Range, EMRange, truncatedFilter);
         
         this.setInternals({
             filteredData,
@@ -343,15 +343,15 @@ class ExplorerTable extends React.Component {
                 Header: 'F1',
                 id: 'f1',
                 show: this.internals.hasValidPredictions,
-                accessor: qa_pair => forceDecimalPlaces(qa_pair.f1, 2),
-                width: 40,
+                accessor: qa_pair => fixDecimalPlaces(qa_pair.f1, 4),
+                width: 50,
                 resizable: false
             }, {
                 Header: 'EM',
                 id: 'em',
                 show: this.internals.hasValidPredictions,
-                accessor: qa_pair => forceDecimalPlaces(qa_pair.em, 2),
-                width: 40,
+                accessor: qa_pair => fixDecimalPlaces(qa_pair.em, 4),
+                width: 50,
                 resizable: false
             }
         ]
@@ -404,15 +404,15 @@ class ExplorerTable extends React.Component {
                 Header: 'F1',
                 id: 'f1',
                 show: this.internals.hasValidPredictions,
-                accessor: qa_pair => forceDecimalPlaces(qa_pair.f1, 2),
-                width: 40,
+                accessor: qa_pair => fixDecimalPlaces(qa_pair.f1, 4),
+                width: 50,
                 resizable: false
             }, {
                 Header: 'EM',
                 id: 'em',
                 show: this.internals.hasValidPredictions,
-                accessor: qa_pair => forceDecimalPlaces(qa_pair.em, 2),
-                width: 40,
+                accessor: qa_pair => fixDecimalPlaces(qa_pair.em, 4),
+                width: 50,
                 resizable: false
             }
         ]
@@ -439,7 +439,7 @@ class ExplorerTable extends React.Component {
                 </div> : null}
                 {(this.props.predictions && this.internals.hasValidPredictions) ? <div className='col-3'>
                     <h4>
-                        F1: {forceDecimalPlaces(this.internals.metrics.f1, 5)}, EM: {forceDecimalPlaces(this.internals.metrics.em, 5)}
+                        F1: {fixDecimalPlaces(this.internals.metrics.f1, 4)}, EM: {fixDecimalPlaces(this.internals.metrics.em, 4)}
                     </h4>
                 </div> : null}
             </div>
@@ -528,11 +528,11 @@ let renderPassageOrQuestionCell = function(props) {
 
                 const context = props.column.id === 'passage' ? 'p' : 'q'
 
-                highlightClassNamePerCategory['clipped_0'] = 'clipped-passage'
+                highlightClassNamePerCategory['truncated_0'] = 'truncated-passage'
                 const max_passage_length = qa_pair.max_passage_length;
                 if (max_passage_length !== undefined && context === 'p') {
                     spans.push([max_passage_length, props.original.passage.length]);
-                    categoryPerSpanIndex.push('clipped_0');
+                    categoryPerSpanIndex.push('truncated_0');
                 }
                 
                 if (!['counting'].includes(qa_pair.predictionType.key)) {
@@ -555,11 +555,11 @@ let renderPassageOrQuestionCell = function(props) {
 
                     highlightClassNamePerCategory['prediction_2'] = 'highlight-predicted';
                     highlightClassNamePerCategory['prediction_2-focus_3'] = 'highlight-predicted-focus';
-                    highlightClassNamePerCategory['clipped_0-prediction_2-focus_3'] = 'highlight-predicted-focus-clipped';
+                    highlightClassNamePerCategory['truncated_0-prediction_2-focus_3'] = 'highlight-predicted-focus-truncated';
                     highlightClassNamePerCategory['gold_1-prediction_2'] = 'highlight-correct';
-                    highlightClassNamePerCategory['clipped_0-gold_1-prediction_2'] = 'highlight-correct-clipped';
+                    highlightClassNamePerCategory['truncated_0-gold_1-prediction_2'] = 'highlight-correct-truncated';
                     highlightClassNamePerCategory['gold_1-prediction_2-focus_3'] = 'highlight-correct-focus';
-                    highlightClassNamePerCategory['clipped_0-gold_1-prediction_2-focus_3'] = 'highlight-correct-focus-clipped';
+                    highlightClassNamePerCategory['truncated_0-gold_1-prediction_2-focus_3'] = 'highlight-correct-focus-truncated';
                 } else {
                     searchWords = [];
                 }
@@ -639,8 +639,11 @@ let activeQuestionChange = function(rowInfo, e) {
     }
 }
 
-function forceDecimalPlaces(num, places) {
-    return num !== undefined ? parseFloat(Math.round(num * Math.pow(10, places)) / Math.pow(10, places)).toFixed(places) : undefined;
+function fixDecimalPlaces(num, places, convertToPercentage) {
+    if (convertToPercentage) {
+        num *= 100
+    }
+    return num !== undefined ? parseFloat((Math.round((num) * Math.pow(10, places)) / Math.pow(10, places)).toFixed(places)) : undefined;
 }
 
 export default ExplorerTable;

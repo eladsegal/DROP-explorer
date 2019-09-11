@@ -20,7 +20,7 @@ import Checkbox from '../../checkbox/Checkbox';
 
 const props_updateSignals = ['predictionTypes']
 const state_updateSignals = ['dataset', 'predictions', 'filteredAnswerTypes', 'answerTypeFilterFirstOnly', 
-                            'answerTypeFilterStrict', 'clippedFilter', 'unclippedFilter',
+                            'answerTypeFilterStrict', 'truncatedFilter', 'untruncatedFilter',
                             'filteredPredictionTypes', 'searchProps', 'F1Range', 'EMRange']
 class ExplorerSettings extends React.Component {
     constructor(props) {
@@ -30,8 +30,8 @@ class ExplorerSettings extends React.Component {
         this.filteredAnswerTypesChange = this.filteredAnswerTypesChange.bind(this);
         this.answerTypeFilterFirstOnlyChange = this.answerTypeFilterFirstOnlyChange.bind(this);
         this.answerTypeFilterStrictChange = this.answerTypeFilterStrictChange.bind(this);
-        this.clippedFilterChange = this.clippedFilterChange.bind(this);
-        this.unclippedFilterChange = this.unclippedFilterChange.bind(this);
+        this.truncatedFilterChange = this.truncatedFilterChange.bind(this);
+        this.untruncatedFilterChange = this.untruncatedFilterChange.bind(this);
         this.filteredPredictionTypesChange = this.filteredPredictionTypesChange.bind(this);
         this.searchFilterChange = this.searchFilterChange.bind(this);
         this.rangeFilterChange = this.rangeFilterChange.bind(this);
@@ -39,8 +39,8 @@ class ExplorerSettings extends React.Component {
             filteredAnswerTypes: this.props.filteredAnswerTypes,
             answerTypeFilterFirstOnly: this.props.answerTypeFilterFirstOnly,
             answerTypeFilterStrict: this.props.answerTypeFilterStrict,
-            clippedFilter: this.props.clippedFilter,
-            unclippedFilter: this.props.unclippedFilter,
+            truncatedFilter: this.props.truncatedFilter,
+            untruncatedFilter: this.props.untruncatedFilter,
             filteredPredictionTypes: this.props.filteredPredictionTypes,
             searchProps: this.props.searchProps,
             F1Range: this.props.F1Range,
@@ -83,12 +83,12 @@ class ExplorerSettings extends React.Component {
         this.setState({ answerTypeFilterStrict });
     }
 
-    clippedFilterChange(clippedFilter) {
-        this.setState({ clippedFilter });
+    truncatedFilterChange(truncatedFilter) {
+        this.setState({ truncatedFilter });
     }
 
-    unclippedFilterChange(unclippedFilter) {
-        this.setState({ unclippedFilter });
+    untruncatedFilterChange(untruncatedFilter) {
+        this.setState({ untruncatedFilter });
     }
 
     filteredPredictionTypesChange(filteredPredictionTypes) {
@@ -203,14 +203,14 @@ class ExplorerSettings extends React.Component {
                     </CardBody>
                 </Card> : null}
                 {this.state.predictions ? <Card className='col-sm-2 p-0'>
-                    <CardHeader>Clipped Filter</CardHeader>
+                    <CardHeader>Truncated Filter</CardHeader>
                     <CardBody>
-                        <Checkbox text={'Show Clipped'} inline={false}
-                            checked={this.state.clippedFilter}
-                            onChange={this.clippedFilterChange}></Checkbox>
-                        <Checkbox text={'Show Unclipped'} inline={false}
-                            checked={this.state.unclippedFilter}
-                            onChange={this.unclippedFilterChange}></Checkbox>
+                        <Checkbox text={'Show Truncated'} inline={false}
+                            checked={this.state.truncatedFilter}
+                            onChange={this.truncatedFilterChange}></Checkbox>
+                        <Checkbox text={'Show Untruncated'} inline={false}
+                            checked={this.state.untruncatedFilter}
+                            onChange={this.untruncatedFilterChange}></Checkbox>
                     </CardBody>
                 </Card> : null}
             </CardGroup>

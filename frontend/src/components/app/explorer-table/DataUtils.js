@@ -79,14 +79,23 @@ export function processDataHelper(dataset, predictions) {
                             if (numbers.length <= 1) {
                                 qa_pair.evaluationPrediction = getAnswerForEvaluation({'spans': qa_pair.prediction});
                             } else {
+                                const numbersStrs = numbers.map(number => {
+                                    if (number === parseFloat(number.toLocaleString().replace(/,/g, ''))) {
+                                        return number.toLocaleString()
+                                    }
+                                    return number.toString()
+                                });
+                                const predictionNumberStr = Number(qa_pair.displayPrediction) === parseFloat(Number(qa_pair.displayPrediction).toLocaleString().replace(/,/g, '')) ? 
+                                                                Number(qa_pair.displayPrediction).toLocaleString() : 
+                                                                qa_pair.displayPrediction;
                                 qa_pair.displayPrediction = `${
-                                    numbers.map((number, index) => {
+                                    numbersStrs.map((numberStr, index) => {
                                         const sign = signs[index]
-                                        return `${index === 0 && sign === '+' ? '' : sign}${index === 0 ? '' : ' '}${number.toLocaleString()}`;
+                                        return `${index === 0 && sign === '+' ? '' : sign}${index === 0 ? '' : ' '}${numberStr}`;
                                     }).join(' ')
-                                } = ${Number(qa_pair.displayPrediction).toLocaleString()}`
+                                } = ${predictionNumberStr}`
 
-                                qa_pair.evaluationPrediction = getAnswerForEvaluation({'spans': numbers.map(x => x.toLocaleString())});
+                                qa_pair.evaluationPrediction = getAnswerForEvaluation({'spans': [...numbersStrs, predictionNumberStr]});
                             }
                         }
 
@@ -225,7 +234,7 @@ function process_qa_pair(accumulator, qa_pair, query_index) {
 
 
 export function filterDataHelper(internals, filteredAnswerTypes, answerTypeFilterFirstOnly, answerTypeFilterStrict, 
-                                filteredPredictionTypes, searchProps, F1Range, EMRange, clippedFilter) {
+                                filteredPredictionTypes, searchProps, F1Range, EMRange, truncatedFilter) {
     const data = internals.data; 
     const filteredDataPerFilter = internals.filteredDataPerFilter;       
 
@@ -314,24 +323,24 @@ export function filterDataHelper(internals, filteredAnswerTypes, answerTypeFilte
         }
     }
 
-    if (internals.hasValidPredictions && !filteredDataPerFilter.clipped) {
-        const showClipped = clippedFilter.showClipped;
-        const showUnclipped = clippedFilter.showUnclipped;
-        if (showClipped || showUnclipped) {
-            if (showClipped && showUnclipped) {
-                filteredDataPerFilter.clipped = data;
+    if (internals.hasValidPredictions && !filteredDataPerFilter.truncated) {
+        const showTruncated = truncatedFilter.showTruncated;
+        const showUntruncated = truncatedFilter.showUntruncated;
+        if (showTruncated || showUntruncated) {
+            if (showTruncated && showUntruncated) {
+                filteredDataPerFilter.truncated = data;
             } else {
-                const reduced = data.reduce(clippedFilterReudcer_rows, {
+                const reduced = data.reduce(truncatedFilterReudcer_rows, {
                     filteredData: [],
-                    showClipped,
-                    showUnclipped,
+                    showTruncated,
+                    showUntruncated,
                 });
                 const result = reduced.filteredData;
     
-                filteredDataPerFilter.clipped = result;
+                filteredDataPerFilter.truncated = result;
             }
         } else {
-            filteredDataPerFilter.clipped = []
+            filteredDataPerFilter.truncated = []
         }
     }
 
@@ -620,15 +629,15 @@ function rangeFilterReudcer_qa_pairs(accumulator, qa_pair) {
     return accumulator;
 }
 
-// Clipped Filtering
-function clippedFilterReudcer_rows(accumulator, row) {
-    const showClipped = accumulator.showClipped;
-    const showUnclipped = accumulator.showUnclipped;
+// Truncated Filtering
+function truncatedFilterReudcer_rows(accumulator, row) {
+    const showTruncated = accumulator.showTruncated;
+    const showUntruncated = accumulator.showUntruncated;
 
-    const { filtered_qa_pairs } = row.qa_pairs.reduce(clippedFilterReudcer_qa_pairs, {
+    const { filtered_qa_pairs } = row.qa_pairs.reduce(truncatedFilterReudcer_qa_pairs, {
         filtered_qa_pairs: [],
-        showClipped,
-        showUnclipped,
+        showTruncated,
+        showUntruncated,
     });
 
     const hasQuestions = filtered_qa_pairs.length > 0;
@@ -643,15 +652,15 @@ function clippedFilterReudcer_rows(accumulator, row) {
     return accumulator;
 }
 
-function clippedFilterReudcer_qa_pairs(accumulator, qa_pair) {
-    const showClipped = accumulator.showClipped;
-    const showUnclipped = accumulator.showUnclipped;
+function truncatedFilterReudcer_qa_pairs(accumulator, qa_pair) {
+    const showTruncated = accumulator.showTruncated;
+    const showUntruncated = accumulator.showUntruncated;
 
     let isValid = false;
-    if (showClipped) {
+    if (showTruncated) {
         isValid |= qa_pair.max_passage_length !== undefined;
     }
-    if (showUnclipped) {
+    if (showUntruncated) {
         isValid |= qa_pair.max_passage_length === undefined;
     }
 
