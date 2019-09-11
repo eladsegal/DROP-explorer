@@ -26,8 +26,8 @@ class App extends React.Component {
         this.predictionTypesChanged = this.predictionTypesChanged.bind(this);
         this.toggleMenu = this.toggleMenu.bind(this);
         this.state = {
-            useLocalDataset: false,
-            allowSourceSelection: true,
+            useLocalDataset: true,
+            allowSourceSelection: false,
             filteredAnswerTypes: ['multi_span', 'single_span', 'number', 'date'],
             answerTypeFilterFirstOnly: true,
             answerTypeFilterStrict: false,
