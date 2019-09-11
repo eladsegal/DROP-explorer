@@ -4,6 +4,8 @@ This is a data explorer for the dataset of [DROP: A Reading Comprehension Benchm
 
 Available at http://eladsegal.github.io/DROP-explorer.
 
+![DROP Explorer screenshot](screenshot.png)
+
 ## Things to know
 
 - Clicking on a question row will highlight a gold answer and the predicted answer.
