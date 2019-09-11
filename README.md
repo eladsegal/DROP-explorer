@@ -17,8 +17,8 @@ The following members are expected in `output_dict`:
 - query_id
 - answer: A JSON object with the following members:
     - value: The final prediction - A string or an array of strings
-    - spans (optional): An array of arrays of the form ["p"/"q", start_index, end_index (exclusive)] used to highlight in the question ("q") or passage ("p") spans that the model focused on for prediction.
-    - numbers (required and used only when the head is "arithmetic"): An array of objects of the form {"value": number, "sign": -1/0/-1} to construct the arithmetic expression used to arrive at the answer.
+    - spans (optional): An array of arrays of the form `["p"/"q", start_index, end_index (exclusive)]` used to highlight in the question (`"q"`) or passage (`"p"`) spans that the model focused on for prediction.
+    - numbers (required and used only when the head is "arithmetic"): An array of objects of the form `{"value": number, "sign": -1/0/-1}` to construct the arithmetic expression used to arrive at the answer.
 - predicted_ability: The name of the head used for prediction 
 - maximizing_ground_truth: An array of strings that is the answer for which the highest F1 score was calculated
 - em: The EM score calculated, a number
