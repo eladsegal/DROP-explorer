@@ -554,6 +554,7 @@ let renderPassageOrQuestionCell = function(props) {
                     }
 
                     highlightClassNamePerCategory['prediction_2'] = 'highlight-predicted';
+                    highlightClassNamePerCategory['focus_3'] = 'highlight-focus';
                     highlightClassNamePerCategory['prediction_2-focus_3'] = 'highlight-predicted-focus';
                     highlightClassNamePerCategory['truncated_0-prediction_2-focus_3'] = 'highlight-predicted-focus-truncated';
                     highlightClassNamePerCategory['gold_1-prediction_2'] = 'highlight-correct';

@@ -28,6 +28,7 @@
 }
 .highlight-focus {
     font-weight: 700;
+    background-color: transparent;
 }
 .truncated-passage {
     background-color: transparent;
