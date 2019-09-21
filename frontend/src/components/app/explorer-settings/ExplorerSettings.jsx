@@ -158,12 +158,12 @@ class ExplorerSettings extends React.Component {
                                     options={answerTypesConst}></CheckboxList>
                             </ListGroupItem>
                             <ListGroupItem style={{width: '100%'}}>
-                                <Checkbox text={'Primary Only'} inline={false}
-                                    checked={this.state.answerTypeFilterFirstOnly}
-                                    onChange={this.answerTypeFilterFirstOnlyChange}></Checkbox>
                                 <Checkbox text={'Strict'} inline={false}
                                     checked={this.state.answerTypeFilterStrict}
                                     onChange={this.answerTypeFilterStrictChange}></Checkbox>
+                                {this.state.predictions ? <Checkbox text={'Best Gold'} inline={false}
+                                    checked={this.state.answerTypeFilterFirstOnly}
+                                    onChange={this.answerTypeFilterFirstOnlyChange}></Checkbox> : null}
                             </ListGroupItem>
                         </ListGroup>
                     </CardBody>

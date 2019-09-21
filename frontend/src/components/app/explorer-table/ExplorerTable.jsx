@@ -514,7 +514,8 @@ let renderPassageOrQuestionCell = function(props) {
             }
         }
         if (qa_pair) {
-            searchWords = [...qa_pair.evaluationAnswers[qa_pair.maximizingGroundTruthIndex]];
+            const maximizingGroundTruthIndex = qa_pair.maximizingGroundTruthIndex !== undefined ? qa_pair.maximizingGroundTruthIndex : 0;
+            searchWords = [...qa_pair.evaluationAnswers[maximizingGroundTruthIndex]];
 
             categoryPerSearchWordIndex = searchWords.map(() => 'gold_1')
             highlightClassNamePerCategory = {'gold_1': 'highlight-gold'}
@@ -589,8 +590,9 @@ let renderAnswersCell = function(props) {
     let searchWords = [];
     const highlightClassName = 'highlight-gold';
     const activeQuestionId = this.state.activeQuestions[props.original.passage_id];
+    const maximizingGroundTruthIndex = props.original.maximizingGroundTruthIndex !== undefined ? props.original.maximizingGroundTruthIndex : 0;
     if (activeQuestionId === props.original.query_id) {        
-        searchWords = props.original.evaluationAnswers[props.original.maximizingGroundTruthIndex];
+        searchWords = props.original.evaluationAnswers[maximizingGroundTruthIndex];
     }
     return <Table style={{height: '100%'}} striped>
         <tbody>
@@ -598,7 +600,7 @@ let renderAnswersCell = function(props) {
                 return <tr key={index}>
                     <td style={{whiteSpace: 'pre-wrap', padding: 0, 'borderTop': 0}}>
                         <WrapDiv><Highlighter autoEscape={true} highlightClassName={highlightClassName} 
-                            searchWords={props.original.maximizingGroundTruthIndex === index ? searchWords : []} 
+                            searchWords={maximizingGroundTruthIndex === index ? searchWords : []} 
                             textToHighlight={answer} /></WrapDiv>
                     </td>
                 </tr>

@@ -60,7 +60,7 @@ export function processDataHelper(dataset, predictions) {
                         qa_pair.prediction = Array.isArray(predictionValue) ? predictionValue : [predictionValue];
                         qa_pair.displayPrediction = getAnswerStringForDisplayAndType({'spans': qa_pair.prediction}).displayAnswer;
                         qa_pair.predictionType = predictionType;
-                        qa_pair.maximizingGroundTruth = prediction.maximizing_ground_truth.sort();
+                        qa_pair.maximizingGroundTruth = prediction.maximizing_ground_truth;
                         qa_pair.f1 = prediction.f1;
                         qa_pair.em = prediction.em;
                         qa_pair.loss = prediction.loss;
@@ -99,18 +99,9 @@ export function processDataHelper(dataset, predictions) {
                             }
                         }
 
-                        const maximizingGroundTruth = qa_pair.maximizingGroundTruth;
-                        const maximizingGroundTruthIndex = qa_pair.evaluationAnswers.findIndex(evaluationAnswer => {
-                            if (evaluationAnswer.length !== maximizingGroundTruth.length) {
-                                return false;
-                            }
-                            for (let i = 0; i < evaluationAnswer.length; i++) {
-                                if (evaluationAnswer[i].toLowerCase() !== maximizingGroundTruth[i].toLowerCase()) {
-                                    return false;
-                                }
-                            }
-                            return true;
-                        });
+                        const {displayAnswer: maximizingDisplayAnswer, answerType: maximizingAnswerType} = getAnswerStringForDisplayAndType(qa_pair.maximizingGroundTruth);
+                        const maximizingGroundTruthIndex = qa_pair.displayAnswers.findIndex((displayAnswer, index) =>
+                            displayAnswer.toLowerCase() === maximizingDisplayAnswer.toLowerCase() && qa_pair.answersTypes[index].key === maximizingAnswerType.key);
                         if (maximizingGroundTruthIndex !== -1) {
                             qa_pair.maximizingGroundTruthIndex = maximizingGroundTruthIndex;
                         }
@@ -193,22 +184,12 @@ function process_qa_pair(accumulator, qa_pair, query_index) {
 
     if (qa_pair.validated_answers && qa_pair.validated_answers.length > 0) {
         qa_pair.validated_answers.forEach(validatedAnswer => {
-            const evaluationAnswer = getAnswerForEvaluation(validatedAnswer)
-
-            const alreadyAdded = evaluationAnswers.some(addedEvaluationAnswer => {
-                if (addedEvaluationAnswer.length !== evaluationAnswer.length) {
-                    return false;
-                }
-                for (let i = 0; i < evaluationAnswer.length; i++) {
-                    if (evaluationAnswer[i].toLowerCase() !== addedEvaluationAnswer[i].toLowerCase()) {
-                        return false;
-                    }
-                }
-                return true;
-            });
+            const {displayAnswer, answerType} = getAnswerStringForDisplayAndType(validatedAnswer);
+            
+            const alreadyAdded = displayAnswers.some((addedDisplayAnswer, i) => 
+                addedDisplayAnswer.toLowerCase() === displayAnswer.toLowerCase() && answersTypes[i].key === answerType.key);
 
             if (!alreadyAdded) {
-                const {displayAnswer, answerType} = getAnswerStringForDisplayAndType(validatedAnswer);
                 displayAnswers.push(displayAnswer);
                 answersTypes.push(answerType);
 
@@ -223,7 +204,6 @@ function process_qa_pair(accumulator, qa_pair, query_index) {
         evaluationAnswers,
         displayAnswers,
         answersTypes,
-        maximizingGroundTruthIndex: 0,
         query_index,
         passage_id
     })
@@ -536,6 +516,8 @@ function typeFilterReudcer_qa_pairs(accumulator, qa_pair) {
     const firstOnly = accumulator.firstOnly;
     const strict = accumulator.strict;
 
+    const useMaximizingOnly = firstOnly && qa_pair.maximizingGroundTruthIndex !== undefined; // should be changed to something more understandable
+
     const foundTypes = new Set();
     let typeValid = false;
     for (let i = 0; i < fields.length; i++) {
@@ -546,21 +528,27 @@ function typeFilterReudcer_qa_pairs(accumulator, qa_pair) {
             const arr = obj;
             for (let j = 0; j < arr.length; j++) {
                 const value = arr[j];
-                if (!strict) {
-                    typeValid = filteredTypes.includes(value.key);
-                    if (typeValid) {
+
+                if (useMaximizingOnly) {
+                    if (qa_pair.maximizingGroundTruthIndex === j) {
+                        typeValid = filteredTypes.includes(value.key);
                         break;
                     }
                 } else {
-                    foundTypes.add(value.key)
-                }
-
-                if (firstOnly) {
-                    break;
+                    if (!strict) {
+                        typeValid = filteredTypes.includes(value.key);
+                        if (typeValid) {
+                            break;
+                        }
+                    } else {
+                        foundTypes.add(value.key)
+                    }
                 }
             }
-            if (strict && foundTypes.size === filteredTypes.length && filteredTypes.every(x => foundTypes.has(x))) {
-                typeValid = true;
+            if (!useMaximizingOnly) {
+                if (strict && foundTypes.size === filteredTypes.length && filteredTypes.every(x => foundTypes.has(x))) {
+                    typeValid = true;
+                }
             }
             if (typeValid) {
                 break;

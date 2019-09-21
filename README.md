@@ -25,7 +25,7 @@ The following members will be used and are required unless mentioned otherwise (
     - spans (optional): An array of arrays of the form `["p" (passage) / "q" (question), start_index, end_index (exclusive)]` used to make spans that the model used for prediction bold.
     - numbers (required and used only when the head is "arithmetic"): An array of objects of the form `{"value": number, "sign": -1/0/-1}` to construct the arithmetic expression used to arrive at the answer
 - predicted_ability: The name of the head used for prediction 
-- maximizing_ground_truth: An array of strings that is the answer for which the highest F1 score was calculated
+- maximizing_ground_truth: The answer for which the highest EM and F1 scores were calculated, in the same format of an answer in the dataset.
 - em (optional): The EM score calculated, a number
 - f1 (optional): The F1 score calculated, a number
 - max_passage_length (optional): The length of the passage that was considered for the model prediction, used to show which parts of the passage were truncated
