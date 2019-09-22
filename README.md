@@ -1,6 +1,6 @@
 # [DROP Explorer](http://eladsegal.github.io/DROP-explorer)
 
-This is a data explorer for the dataset of [DROP: A Reading Comprehension Benchmark Requiring Discrete Reasoning Over Paragraphs](https://allennlp.org/drop).
+This is a data explorer for the dataset [DROP: A Reading Comprehension Benchmark Requiring Discrete Reasoning Over Paragraphs](https://allennlp.org/drop).
 
 Available at http://eladsegal.github.io/DROP-explorer.
 
