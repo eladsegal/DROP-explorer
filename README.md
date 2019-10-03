@@ -2,9 +2,9 @@
 
 This is a data explorer for the dataset [DROP: A Reading Comprehension Benchmark Requiring Discrete Reasoning Over Paragraphs](https://allennlp.org/drop).
 
-#### Available for immediate use at http://eladsegal.github.io/DROP-explorer.
-
-Prediction files examples are available [here](https://github.com/eladsegal/project-NLP-AML/tree/master/predictions).
+#### Available for immediate use at http://eladsegal.github.io/DROP-explorer.  
+- Dataset files are available [here](https://allennlp.org/drop).
+- Prediction files examples are available [here](https://github.com/eladsegal/project-NLP-AML/tree/master/predictions).
 
 ![DROP Explorer screenshot](screenshot.png)
 
