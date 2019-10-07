@@ -4,7 +4,7 @@ This is a data explorer for the dataset [DROP: A Reading Comprehension Benchmark
 
 #### Available for immediate use at http://eladsegal.github.io/DROP-explorer.  
 - Dataset files are available [here](https://allennlp.org/drop).
-- Prediction files examples are available [here](https://github.com/eladsegal/project-NLP-AML/tree/master/predictions).
+- Prediction files examples are available [here](https://github.com/eladsegal/tag-based-multi-span-extraction/tree/master/predictions).
 
 ![DROP Explorer screenshot](screenshot.png)
 
