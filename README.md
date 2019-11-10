@@ -1,10 +1,10 @@
-# DROP Explorer
+# [DROP Explorer](http://eladsegal.github.io/DROP-explorer)
 
-This is a data explorer for the dataset of [DROP: A Reading Comprehension Benchmark Requiring Discrete Reasoning Over Paragraphs](https://allennlp.org/drop).
+This is a data explorer for the dataset [DROP: A Reading Comprehension Benchmark Requiring Discrete Reasoning Over Paragraphs](https://allennlp.org/drop).
 
-Available at http://eladsegal.github.io/DROP-explorer.
-
-Prediction files examples are available [here](https://github.com/eladsegal/project-NLP-AML/tree/master/predictions).
+#### Available for immediate use at http://eladsegal.github.io/DROP-explorer.  
+- Dataset files are available [here](https://allennlp.org/drop).
+- Prediction files examples are available [here](https://github.com/eladsegal/tag-based-multi-span-extraction/tree/master/predictions).
 
 ![DROP Explorer screenshot](screenshot.png)
 
@@ -13,7 +13,10 @@ Prediction files examples are available [here](https://github.com/eladsegal/proj
 - Clicking on a question row will highlight a gold answer and the predicted answer.
 - Multi-span answers are sorted
 - The first answer displayed is the one in "answer", the rest are from "validated_answers" and only distinct answers are displayed. 
-
+- Be aware that heads with some names are handled in a special way:
+    - Predictions from "counting" head won't be highlighted
+    - Predictions from "arithmetic" head are expected to have a member named "numbers" in "answer" which is an array.
+    
 ## Expected Predictions File Format
 
 The expected predictions file format is JSONL, where each line is a JSON object that is the `output_dict` of an instance prediction.
@@ -29,9 +32,3 @@ The following members will be used and are required unless mentioned otherwise (
 - em (optional): The EM score calculated, a number
 - f1 (optional): The F1 score calculated, a number
 - max_passage_length (optional): The length of the passage that was considered for the model prediction, used to show which parts of the passage were truncated
-
-## Known Issues
-
-- Be aware that currently there is code that treat some heads names in a special way:
-    - Predictions from "counting" head won't be highlighted
-    - Predictions from "arithmetic" head are expected to have a member named "numbers" in "answer" which is an array.
