@@ -5,7 +5,7 @@
     background: rgba(0, 162, 255, 0.05);
 }
 .ReactTable.-highlight-passage .rt-tbody .rt-tr:not(.-padRow):hover {
-    background: rgba(231, 216, 82, 0.541);
+    background: rgba(255, 175, 118, 0.541);
 }
 .ReactTable.-striped-question .rt-tr.-odd {
     background: rgba(209, 175, 223, 0.17);
