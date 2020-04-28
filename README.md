@@ -5,8 +5,8 @@ This is a data explorer for the dataset [DROP: A Reading Comprehension Benchmark
 #### Available for immediate use at http://eladsegal.github.io/DROP-explorer.  
 - Dataset files are available [here](https://allennlp.org/drop).
 - Prediction files examples are available [here](https://github.com/eladsegal/tag-based-multi-span-extraction/tree/master/predictions).  
-For DROP, use the standardized dataset file [here](https://github.com/eladsegal/tag-based-multi-span-extraction/tree/master/drop_data) (drop_dataset_dev_standardized.json) for correct alignment.  
-For Quoref, use the DROPified dataset file [here](https://github.com/eladsegal/tag-based-multi-span-extraction/tree/master/quoref_data) (quoref_dataset_dev.json).
+For DROP, use the standardized dataset file [here](https://github.com/eladsegal/tag-based-multi-span-extraction/blob/master/drop_data/drop_dataset_dev_standardized.json) for correct alignment.  
+For Quoref, use the DROPified dataset file [here](https://github.com/eladsegal/tag-based-multi-span-extraction/blob/master/quoref_data/quoref_dataset_dev.json).
 
 ![DROP Explorer screenshot](screenshot.png)
 
