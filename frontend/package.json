@@ -8,7 +8,7 @@
     "chalk": "^2.4.2",
     "clone-deep": "^4.0.1",
     "gh-pages": "^2.1.1",
-    "node-sass": "^4.12.0",
+    "node-sass": "^7.0.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-highlight-words": "github:eladsegal/react-highlight-words",
