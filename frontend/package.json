@@ -12,7 +12,7 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-highlight-words": "github:eladsegal/react-highlight-words",
-    "react-scripts": "3.0.1",
+    "react-scripts": "5.0.1",
     "react-table": "6.10.0",
     "reactstrap": "^8.0.1",
     "styled-components": "4.3.2"
